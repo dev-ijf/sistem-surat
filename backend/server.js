@@ -130,7 +130,7 @@ const initializeDatabase = async () => {
   if (DB_PASSWORD !== '') {
     adminConfig.password = DB_PASSWORD;
   }
-
+/** 
   const adminClient = new Client(adminConfig);
   await adminClient.connect();
   const dbExists = await adminClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [DB_NAME]);
@@ -138,19 +138,16 @@ const initializeDatabase = async () => {
     await adminClient.query(`CREATE DATABASE "${DB_NAME}"`);
   }
   await adminClient.end();
-
+*/
   const poolConfig = {
-    host: DB_HOST,
-    port: DB_PORT,
-    user: DB_USER,
-    database: DB_NAME,
-    max: 10
-  };
-  if (DB_PASSWORD !== '') {
-    poolConfig.password = DB_PASSWORD;
-  }
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+  max: 10,
+};
 
-  pool = new Pool(poolConfig);
+pool = new Pool(poolConfig);
 
   await query(`CREATE TABLE IF NOT EXISTS jenis_surat (
     id SERIAL PRIMARY KEY,
