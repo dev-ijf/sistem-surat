@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-labelledby="title desc">
+  <title id="title">Kreativa Education Network</title>
+  <desc id="desc">Kreativa Education Network logo with a purple and pink shield.</desc>
+  <defs>
+    <clipPath id="shieldClip">
+      <path d="M320 62C216 62 125 80 91 95c-21 9-34 30-34 54v191c0 68 36 130 94 164l137 80c20 12 44 12 64 0l137-80c58-34 94-96 94-164V149c0-24-13-45-34-54C515 80 424 62 320 62Z"/>
+    </clipPath>
+  </defs>
+
+  <path fill="#3c3290" d="M320 42c108 0 204 19 241 36 31 14 50 43 50 77v191c0 78-41 151-108 190l-138 81c-28 16-62 16-90 0l-138-81C70 497 29 424 29 346V155c0-34 19-63 50-77 37-17 133-36 241-36Z"/>
+  <path fill="#fff" d="M320 72c101 0 191 17 225 32 19 9 31 27 31 48v189c0 66-35 128-92 161l-137 81c-17 10-37 10-54 0l-137-81C99 469 64 407 64 341V152c0-21 12-39 31-48 34-15 124-32 225-32Z"/>
+
+  <g clip-path="url(#shieldClip)">
+    <rect x="57" y="62" width="263" height="263" fill="#3c3290"/>
+    <rect x="320" y="62" width="263" height="263" fill="#ef3468"/>
+    <rect x="57" y="325" width="263" height="315" fill="#ef3468"/>
+    <rect x="320" y="325" width="263" height="315" fill="#3c3290"/>
+  </g>
+
+  <path fill="none" stroke="#fff" stroke-width="15" d="M320 72c101 0 191 17 225 32 19 9 31 27 31 48v189c0 66-35 128-92 161l-137 81c-17 10-37 10-54 0l-137-81C99 469 64 407 64 341V152c0-21 12-39 31-48 34-15 124-32 225-32Z"/>
+
+  <g fill="#fff">
+    <path d="M130 132c16 11 28 12 49 12h42c16 0 28 12 28 28v78c-8-6-18-9-29-9h-90V132Zm128 40c0-16 12-28 28-28h42c21 0 33-1 49-12v109h-90c-11 0-21 3-29 9v-78Zm-128 87h90c20 0 32 8 39 28 7-20 19-28 39-28h79v17h-78c-19 0-30 6-36 23h-8c-6-17-17-23-36-23h-89v-17Z"/>
+    <path d="M447 125l27 56c4 8 10 13 19 14l61 9c18 3 25 25 12 38l-44 43c-6 6-9 14-8 23l10 61c3 18-16 32-32 23l-54-28c-8-4-16-4-24 0l-54 28c-16 9-35-5-32-23l10-61c1-9-2-17-8-23l-44-43c-13-13-6-35 12-38l61-9c9-1 15-6 19-14l27-56c8-17 32-17 40 0Z"/>
+    <path d="M184 351c-46 0-84 38-84 84 0 23 9 43 24 59 7 7 12 17 15 27 3 11 13 18 25 18h40c12 0 22-7 25-18 3-10 8-20 15-27 15-16 24-36 24-59 0-46-38-84-84-84Zm0 129c-25 0-45-20-45-45s20-45 45-45 45 20 45 45-20 45-45 45Z"/>
+    <path d="M204 553h-40v17c0 8 6 14 14 14h12c8 0 14-6 14-14v-17Zm-52-147 15-15 15 8c6-3 12-5 18-6l5-16h22l5 16c7 1 13 4 18 7l15-8 16 15-8 15c3 6 5 12 6 18l16 5v22l-16 5c-1 7-4 13-7 18l8 15-15 16-15-8c-6 3-12 5-18 6l-5 16h-22l-5-16c-7-1-13-4-18-7l-15 8-16-15 8-15c-3-6-5-12-6-18l-16-5v-22l16-5c1-7 4-13 7-18l-8-16Z"/>
+    <path d="M386 370c0-11 9-20 20-20s20 9 20 20c0 7-4 14-10 17v151c0 6-4 10-10 10s-10-4-10-10V387c-6-3-10-10-10-17Zm52 30h125l-55 55 55 55H438V400Z"/>
+  </g>
+
+  <text x="320" y="565" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="86" font-weight="900" letter-spacing="6" fill="#3c3290">KREATIVA</text>
+  <text x="320" y="624" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="34" font-weight="900" letter-spacing="4" fill="#ef3468">EDUCATION NETWORK</text>
+</svg>
