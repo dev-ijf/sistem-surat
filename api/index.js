@@ -18,9 +18,12 @@ let pool;
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const uploadDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, 'uploads');
 
-const uploadDir = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadDir));
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
@@ -241,6 +244,10 @@ pool = new Pool(poolConfig);
 
 app.get('/', (req, res) => {
   res.send('Backend aktif');
+});
+
+app.get(['/api', '/api/health'], (req, res) => {
+  res.json({ status: 'ok', message: 'Backend aktif' });
 });
 
 app.use('/api', ensureDatabaseInitialized);
