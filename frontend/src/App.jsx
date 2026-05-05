@@ -6,7 +6,24 @@ import {
   Tag, Users, Building, ArrowRight, Copy
 } from 'lucide-react';
 
-const API_BASE = "/api";
+const getApiBase = () => {
+  const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+  const isBrowser = typeof window !== "undefined";
+  const isLocalPage = isBrowser && ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  const pointsToLocalhost = configuredUrl && /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredUrl);
+
+  if (configuredUrl && (!pointsToLocalhost || isLocalPage)) {
+    const normalizedUrl = configuredUrl.startsWith("/") || /^https?:\/\//i.test(configuredUrl)
+      ? configuredUrl
+      : `https://${configuredUrl}`;
+
+    return normalizedUrl.replace(/\/$/, "");
+  }
+
+  return "/api";
+};
+
+const API_BASE = getApiBase();
 const GOOGLE_CLIENT_ID = "GANTI_DENGAN_GOOGLE_CLIENT_ID_KAMU.apps.googleusercontent.com";
 
 const App = () => {
@@ -276,7 +293,7 @@ const App = () => {
       setEditingMaster(null);
       setMasterForm({ nama: '', deskripsi: '', jabatan: '' });
     } catch (err) {
-      alert("Koneksi gagal: Pastikan backend di localhost:5000 sudah berjalan.");
+      alert(`Koneksi gagal: Pastikan endpoint backend ${API_BASE} sudah tersedia.`);
     }
   };
 
@@ -393,7 +410,7 @@ const App = () => {
       setShowModal(false);
       resetForm();
     } catch (err) {
-      alert("Gagal menyimpan: Pastikan backend di localhost:5000 aktif, CORS diizinkan, dan upload file didukung.");
+      alert(`Gagal menyimpan: Pastikan backend ${API_BASE} aktif, CORS diizinkan, dan upload file didukung.`);
       setIsConnected(false);
     } finally {
       setIsSaving(false);
@@ -477,7 +494,7 @@ const App = () => {
       {!isConnected && (
         <div className="bg-red-600 text-white text-[10px] font-semibold py-2 px-4 flex items-center justify-center gap-2 uppercase tracking-[0.12em] fixed top-0 w-full z-100 shadow-lg">
           <WifiOff size={13} strokeWidth={2.5} />
-          Backend Offline (localhost:5000)
+          Backend Offline ({API_BASE})
           <button
             onClick={() => fetchData()}
             className="ml-2 bg-white/20 px-2.5 py-1 rounded-md hover:bg-white/30 transition-all"
@@ -587,7 +604,7 @@ const App = () => {
                 <AlertCircle className="mx-auto text-red-400 mb-3" size={36} />
                 <h3 className="text-red-900 font-bold text-lg mb-1">Gagal Menghubungi Server</h3>
                 <p className="text-red-600 text-sm max-w-md mx-auto">
-                  Aplikasi tidak bisa mengambil data dari <code className="bg-red-100 px-2 py-0.5 rounded">localhost:5000</code>.
+                  Aplikasi tidak bisa mengambil data dari <code className="bg-red-100 px-2 py-0.5 rounded">{API_BASE}</code>.
                 </p>
               </div>
             )}

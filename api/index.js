@@ -243,6 +243,8 @@ app.get('/', (req, res) => {
   res.send('Backend aktif');
 });
 
+app.use('/api', ensureDatabaseInitialized);
+
 app.get('/api/surat', async (req, res) => {
   try {
     const rows = await query('SELECT * FROM surat ORDER BY id DESC');
@@ -342,13 +344,24 @@ app.delete('/api/surat/:id', async (req, res) => {
 });
 
 let databaseInitialized = false;
+let databaseInitPromise = null;
 
 async function ensureDatabaseInitialized(req, res, next) {
   try {
     if (!databaseInitialized) {
-      await initializeDatabase();
-      databaseInitialized = true;
-      console.log("Database initialized");
+      if (!databaseInitPromise) {
+        databaseInitPromise = initializeDatabase()
+          .then(() => {
+            databaseInitialized = true;
+            console.log("Database initialized");
+          })
+          .catch((error) => {
+            databaseInitPromise = null;
+            throw error;
+          });
+      }
+
+      await databaseInitPromise;
     }
     next();
   } catch (error) {
@@ -359,7 +372,5 @@ async function ensureDatabaseInitialized(req, res, next) {
     });
   }
 }
-
-app.use(ensureDatabaseInitialized);
 
 module.exports = app;
