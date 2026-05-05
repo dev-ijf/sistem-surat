@@ -6,7 +6,7 @@ import {
   Tag, Users, Building, ArrowRight, Copy
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = "/api";
 const GOOGLE_CLIENT_ID = "GANTI_DENGAN_GOOGLE_CLIENT_ID_KAMU.apps.googleusercontent.com";
 
 const App = () => {
