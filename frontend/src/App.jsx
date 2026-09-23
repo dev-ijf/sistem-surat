@@ -51,7 +51,10 @@ const App = () => {
       { id: 1, nama: 'Penting', deskripsi: 'Membutuhkan respon segera' },
       { id: 2, nama: 'Biasa', deskripsi: 'Korespondensi umum' }
     ],
-    'Struktur Organisasi': [],
+    'Struktur Organisasi': [
+      { id: 1, nama: 'DIR', jabatan: 'Direktur' },
+      { id: 2, nama: 'KS', jabatan: 'Kepala Sekolah' }
+    ],
     'Instansi': [
       { id: 1, nama: 'IJF' },
       { id: 2, nama: 'KEN' },
@@ -505,25 +508,25 @@ const App = () => {
       )}
 
       <header className={`sticky top-0 z-40 border-b border-slate-200/70 bg-white/90 backdrop-blur-xl ${!isConnected ? 'mt-8' : ''}`}>
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-2 md:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 md:px-8">
           <div className="flex items-center gap-3">
-            <img src="/LOGO KREATIVA EDUCATION NETWORK-01.png" alt="Kreativa Education Network" className="h-12 w-auto shrink-0" />
-            <div className="flex flex-col">
-              <h1 className="text-[12px] font-semibold tracking-tight text-slate-950">
+            <img src="/LOGO KREATIVA EDUCATION NETWORK-01.png" alt="Kreativa Education Network" className="h-11 w-auto shrink-0" />
+            <div className="flex flex-col mt-0.5">
+              <h1 className="font-semibold tracking-tight text-slate-950" style={{ fontSize: '25px'}}>
                 Sistem Manajemen Surat
               </h1>
             </div>
           </div>
           <button
             onClick={() => { resetForm(); setShowModal(true); }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-2xl font-semibold text-sm flex items-center gap-2 transition-all shadow-sm hover:bg-blue-700"
+            className="bg-blue-600 text-white px-3.5 py-1.5 rounded-2xl font-semibold text-[13px] flex items-center gap-1.5 transition-all shadow-sm hover:bg-blue-700"
           >
-            <Plus size={16} strokeWidth={2.5} /> Surat Baru
+            <Plus size={15} strokeWidth={2.5} /> Surat Baru
           </button>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-5 md:p-8">
+      <main className="max-w-6xl mx-auto p-4 md:p-6">
         <div className="flex flex-col gap-4 mb-6 border-b border-slate-200 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-6">
             <button
@@ -546,10 +549,10 @@ const App = () => {
 
         {activeTab === 'daftar' ? (
           <div>
-            <div className="bg-white rounded-4xl border border-slate-200 shadow-xl p-8 mb-6">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 mb-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="relative flex-1 min-w-0">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
                   <input
                     className="input-field search-field"
                     placeholder="Cari nomor, perihal, tujuan..."
@@ -557,7 +560,7 @@ const App = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-1 gap-3 w-full max-w-2xl sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2.5 w-full max-w-xl sm:grid-cols-2">
                   <select
                     className="input-field"
                     value={filterCategory}
@@ -579,22 +582,22 @@ const App = () => {
                 </div>
               </div>
 
-              <div className="grid gap-5 mt-7 md:grid-cols-4">
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Total Surat</p>
-                  <p className="mt-3 text-3xl font-bold text-slate-900">{totalCount}</p>
+              <div className="grid gap-3 mt-4 md:grid-cols-4">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Total Surat</p>
+                  <p className="mt-0.5 text-xl font-bold text-slate-900">{totalCount}</p>
                 </div>
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Draft</p>
-                  <p className="mt-3 text-3xl font-bold text-amber-500">{draftCount}</p>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Draft</p>
+                  <p className="mt-0.5 text-xl font-bold text-amber-500">{draftCount}</p>
                 </div>
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Terkirim</p>
-                  <p className="mt-3 text-3xl font-bold text-blue-600">{terkirimCount}</p>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Terkirim</p>
+                  <p className="mt-0.5 text-xl font-bold text-blue-600">{terkirimCount}</p>
                 </div>
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Selesai</p>
-                  <p className="mt-3 text-3xl font-bold text-emerald-500">{selesaiCount}</p>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Selesai</p>
+                  <p className="mt-0.5 text-xl font-bold text-emerald-500">{selesaiCount}</p>
                 </div>
               </div>
             </div>
@@ -609,57 +612,57 @@ const App = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-100">
-                      <th className="p-4 text-[11px] uppercase font-semibold text-slate-400 tracking-[0.16em]">Nomor Surat</th>
-                      <th className="p-4 text-[11px] uppercase font-semibold text-slate-400 tracking-[0.16em]">Perihal</th>
-                      <th className="p-4 text-[11px] uppercase font-semibold text-slate-400 tracking-[0.16em]">Pengirim</th>
-                      <th className="p-4 text-[11px] uppercase font-semibold text-slate-400 tracking-[0.16em]">Tanggal</th>
-                      <th className="p-4 text-[11px] uppercase font-semibold text-slate-400 tracking-[0.16em] text-center">Aksi</th>
+                      <th className="px-4 py-2.5 text-[10px] uppercase font-bold text-slate-500 tracking-wider">Nomor Surat</th>
+                      <th className="px-4 py-2.5 text-[10px] uppercase font-bold text-slate-500 tracking-wider">Perihal</th>
+                      <th className="px-4 py-2.5 text-[10px] uppercase font-bold text-slate-500 tracking-wider">Pengirim</th>
+                      <th className="px-4 py-2.5 text-[10px] uppercase font-bold text-slate-500 tracking-wider">Tanggal</th>
+                      <th className="px-4 py-2.5 text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Aksi</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-100">
                     {visibleSuratList.map((s) => (
-                      <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-semibold text-blue-600 text-sm break-all">{s.nomorSurat}</span>
+                      <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono font-semibold text-blue-600 text-xs break-all">{s.nomorSurat}</span>
                             <button
                               onClick={() => handleCopyNomorSurat(s.nomorSurat)}
-                              className="p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-all"
+                              className="p-1 text-slate-400 hover:text-blue-600 hover:bg-slate-200 rounded transition-all"
                               title="Salin nomor surat"
                             >
-                              <Copy size={15} />
+                              <Copy size={13} />
                             </button>
                           </div>
                         </td>
-                        <td className="p-4">
-                          <div className="font-semibold text-slate-700 max-w-xs truncate">{s.perihal}</div>
-                          <div className="text-[11px] text-slate-400 uppercase mt-1">
+                        <td className="px-4 py-2">
+                          <div className="font-semibold text-[13px] text-slate-700 max-w-xs truncate">{s.perihal}</div>
+                          <div className="text-[9px] text-slate-400 uppercase mt-0.5 font-medium">
                             {s.jenisSurat} • {s.kategori}
                           </div>
                         </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-[11px]">
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-[9px]">
                               {s.dari?.substring(0, 2).toUpperCase() || '??'}
                             </div>
-                            <span className="text-sm font-medium text-slate-600">{s.dari}</span>
+                            <span className="text-[13px] font-medium text-slate-600">{s.dari}</span>
                           </div>
                         </td>
-                        <td className="p-4 text-sm text-slate-500">
+                        <td className="px-4 py-2 text-[13px] text-slate-500">
                           {s.tglSurat ? new Date(s.tglSurat).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                         </td>
-                        <td className="p-4">
-                          <div className="flex justify-center gap-2">
-                            <button onClick={() => openEditSurat(s)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-all">
-                              <Edit2 size={15} />
+                        <td className="px-4 py-2">
+                          <div className="flex justify-center gap-1">
+                            <button onClick={() => openEditSurat(s)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-slate-200 rounded transition-all">
+                              <Edit2 size={13} />
                             </button>
-                            <button onClick={() => handleDeleteSurat(s.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded-lg transition-all">
-                              <Trash2 size={15} />
+                            <button onClick={() => handleDeleteSurat(s.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-200 rounded transition-all">
+                              <Trash2 size={13} />
                             </button>
                           </div>
                         </td>
@@ -668,7 +671,7 @@ const App = () => {
 
                     {visibleSuratList.length === 0 && !isLoading && (
                       <tr>
-                        <td colSpan="5" className="p-12 text-center text-slate-400 italic text-sm">
+                        <td colSpan="5" className="p-8 text-center text-slate-400 italic text-sm">
                           {isConnected ? "Tidak ada arsip surat." : "Gagal memuat data dari server."}
                         </td>
                       </tr>
@@ -680,22 +683,22 @@ const App = () => {
           </div>
         ) : (
           <div>
-            <div className="mb-6">
+            <div className="mb-4">
               <h2 className="text-lg font-semibold text-slate-900">Master Data</h2>
               <p className="mt-1 text-sm text-slate-500">Kelola referensi kategori, pengirim, instansi, dan tujuan internal secara cepat.</p>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {masterCardConfig.map((card) => (
-                <div key={card.key} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
+                <div key={card.key} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                      <div className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         {card.icon}
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-sm font-semibold text-slate-900 text-left">{card.title}</h3>
-                        <p className="text-xs text-slate-500 text-left">{card.subtitle}</p>
+                        <p className="text-[11px] text-slate-500 text-left">{card.subtitle}</p>
                       </div>
                     </div>
                     <button
@@ -705,23 +708,23 @@ const App = () => {
                         setMasterForm({ nama: '', deskripsi: '', jabatan: '' });
                         setShowMasterModal(true);
                       }}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-blue-600 hover:border-slate-300 hover:bg-slate-100 hover:text-blue-700"
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600 hover:border-slate-300 hover:bg-slate-100 hover:text-blue-700"
                     >
                       + Tambah
                     </button>
                   </div>
 
-                  <div className="mt-6 space-y-3">
+                  <div className="mt-4 space-y-2">
                     {(masterData[card.key] || []).map((item, index) => (
-                      <div key={item.id || index} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                        <div className="flex items-start justify-between gap-3">
+                      <div key={item.id || index} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                        <div className="flex items-center justify-between gap-3">
                           <div className="text-left">
-                            <div className="font-semibold text-slate-900 text-left">{item.nama}</div>
+                            <div className="font-semibold text-slate-900 text-[13px]">{item.nama}</div>
                             {(item.deskripsi || item.jabatan) && (
-                              <div className="mt-1 text-xs text-slate-500 text-left">{item.deskripsi || item.jabatan}</div>
+                              <div className="mt-0.5 text-[11px] text-slate-500">{item.deskripsi || item.jabatan}</div>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => {
                                 setActiveMasterCard(card.key);
@@ -733,22 +736,22 @@ const App = () => {
                                 });
                                 setShowMasterModal(true);
                               }}
-                              className="rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-all"
+                              className="rounded-full p-1.5 text-slate-500 hover:bg-slate-200 hover:text-blue-600 transition-all"
                             >
-                              <Edit2 size={14} />
+                              <Edit2 size={13} />
                             </button>
                             <button
                               onClick={() => handleDeleteMaster(item, card.key)}
-                              className="rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-red-500 transition-all"
+                              className="rounded-full p-1.5 text-slate-500 hover:bg-slate-200 hover:text-red-500 transition-all"
                             >
-                              <Trash2 size={14} />
+                              <Trash2 size={13} />
                             </button>
                           </div>
                         </div>
                       </div>
                     ))}
                     {(masterData[card.key] || []).length === 0 && (
-                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-400">
+                      <div className="rounded-xl border border-dashed border-slate-200 px-3 py-2.5 text-[11px] text-slate-400">
                         Belum ada data.
                       </div>
                     )}
@@ -813,7 +816,7 @@ const App = () => {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
             <div className="flex justify-between items-center px-6 md:px-8 py-5 border-b border-slate-100">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
@@ -912,18 +915,18 @@ const App = () => {
                   </div>
 
                   <div className="pt-2">
-                    <div className="p-6 bg-linear-to-br from-slate-900 to-slate-800 rounded-2xl text-center shadow-lg border border-slate-700 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-3 opacity-10"><Hash size={64} /></div>
-                      <label className="text-[10px] font-semibold text-slate-400 mb-3 block uppercase tracking-[0.2em]">
+                    <div className="p-4 bg-slate-900 rounded-xl text-center shadow-md relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-2 opacity-10"><Hash size={48} className="text-white" /></div>
+                      <label className="text-[9px] font-bold text-slate-400 mb-1.5 block uppercase tracking-[0.2em]">
                         Nomor Surat Terbentuk
                       </label>
-                      <div className="font-mono font-bold text-white text-lg md:text-xl tracking-tight wrap-break-word">
+                      <div className="font-mono font-bold text-white text-sm tracking-tight wrap-break-word">
                         {formData.nomorSurat || "Menunggu Input..."}
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>  
             </div>
 
             <div className="px-6 md:px-8 py-5 bg-slate-50/80 border-t border-slate-100 flex justify-end items-center gap-4">
@@ -955,10 +958,10 @@ const App = () => {
           width: 100%;
           border: 1px solid #e2e8f0;
           background: white;
-          padding: 0.85rem 1rem;
-          border-radius: 0.9rem;
+          padding: 0.4rem 0.6rem;
+          border-radius: 0.4rem;
           outline: none;
-          font-size: 0.9rem;
+          font-size: 0.8rem;
           font-weight: 500;
           transition: all 0.2s;
           color: #1e293b;
@@ -966,22 +969,22 @@ const App = () => {
 
         .input-field:focus {
           border-color: #3b82f6;
-          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
           background: #fff;
         }
 
         .search-field {
-          padding-left: 2.6rem;
-          padding-right: 1rem;
+          padding-left: 2rem;
+          padding-right: 0.6rem;
         }
 
         select.input-field {
           appearance: none;
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
           background-repeat: no-repeat;
-          background-position: right 1rem center;
+          background-position: right 0.75rem center;
           background-size: 1rem;
-          padding-right: 2.8rem;
+          padding-right: 2.2rem;
         }
 
         .scrollbar-hide::-webkit-scrollbar {
