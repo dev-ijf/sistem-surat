@@ -816,26 +816,26 @@ const App = () => {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-            <div className="flex justify-between items-center px-6 md:px-8 py-5 border-b border-slate-100">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-white/20">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100">
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
                   {editingSurat ? 'Perbarui Arsip' : 'Formulir Surat Baru'}
                 </h2>
-                <p className="text-[11px] font-medium text-slate-400 uppercase tracking-[0.12em] mt-1">
+                <p className="text-[10px] font-medium text-slate-400 uppercase tracking- mt-0.5">
                   Sinkronisasi data otomatis
                 </p>
               </div>
-              <button onClick={() => setShowModal(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-slate-900 transition-all">
-                <X size={22} />
+              <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:text-slate-900 transition-all">
+                <X size={18} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 md:px-8 py-6 scrollbar-hide">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold text-slate-400 block uppercase tracking-[0.14em]">Jenis Surat *</label>
+            <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-hide">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Jenis Surat *</label>
                     <select className="input-field" value={formData.jenisSurat} onChange={e => setFormData({ ...formData, jenisSurat: e.target.value })}>
                       <option value="">-- Pilih Jenis Surat --</option>
                       {masterData['Jenis Surat'].map(j => (
@@ -844,8 +844,8 @@ const App = () => {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold text-slate-400 block uppercase tracking-[0.14em]">Dari (Pengirim) *</label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Dari (Pengirim) *</label>
                     <select className="input-field" value={formData.dari} onChange={e => setFormData({ ...formData, dari: e.target.value })}>
                       <option value="">-- Pilih Pengirim --</option>
                       {masterData['Struktur Organisasi'].map(s => (
@@ -854,8 +854,8 @@ const App = () => {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold text-slate-400 block uppercase tracking-[0.14em]">Kategori *</label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Kategori *</label>
                     <select className="input-field" value={formData.kategori} onChange={e => setFormData({ ...formData, kategori: e.target.value })}>
                       {masterData['Kategori Surat'].map(k => (
                         <option key={k.id} value={k.nama}>{k.nama}</option>
@@ -863,10 +863,10 @@ const App = () => {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold text-slate-400 block uppercase tracking-[0.14em]">Perihal Surat *</label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Perihal Surat *</label>
                     <textarea
-                      className="input-field min-h-30 resize-none"
+                      className="input-field min-h-20 resize-none"
                       value={formData.perihal}
                       onChange={e => setFormData({ ...formData, perihal: e.target.value })}
                       placeholder="Ringkasan isi surat..."
@@ -874,22 +874,22 @@ const App = () => {
                   </div>
                 </div>
 
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold text-slate-400 block uppercase tracking-[0.14em]">Tanggal Surat</label>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Tanggal Surat</label>
                     <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
                       <input
                         type="date"
-                        className="input-field pl-11"
+                        className="input-field pl-9"
                         value={formData.tglSurat}
                         onChange={e => setFormData({ ...formData, tglSurat: e.target.value })}
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold text-slate-400 block uppercase tracking-[0.14em]">Instansi *</label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Instansi *</label>
                     <select className="input-field" value={formData.instansi} onChange={e => setFormData({ ...formData, instansi: e.target.value })}>
                       <option value="">-- Pilih Instansi --</option>
                       {masterData['Instansi'].map(i => (
@@ -898,29 +898,28 @@ const App = () => {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">
                       Upload Dokumen
                     </label>
                     <input
                       type="file"
-                      className="input-field file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-600"
+                      className="input-field file:mr-2 file:rounded-md file:border-0 file:bg-blue-50 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-blue-600 text-xs"
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                       onChange={handleFileChange}
                     />
-                    <p className="text-xs text-slate-400">
-                      Opsional. Boleh kosong.
-                      {formData.fileSuratName ? ` File dipilih: ${formData.fileSuratName}` : ''}
+                    <p className="text-[10px] text-slate-400">
+                      Opsional. {formData.fileSuratName ? ` File: ${formData.fileSuratName}` : ''}
                     </p>
                   </div>
 
-                  <div className="pt-2">
-                    <div className="p-4 bg-slate-900 rounded-xl text-center shadow-md relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-2 opacity-10"><Hash size={48} className="text-white" /></div>
-                      <label className="text-[9px] font-bold text-slate-400 mb-1.5 block uppercase tracking-[0.2em]">
+                  <div className="pt-1">
+                    <div className="p-3 bg-slate-900 rounded-xl text-center shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-2 opacity-10"><Hash size={36} className="text-white" /></div>
+                      <label className="text-[9px] font-bold text-slate-400 mb-1 block uppercase tracking-[0.2em]">
                         Nomor Surat Terbentuk
                       </label>
-                      <div className="font-mono font-bold text-white text-sm tracking-tight wrap-break-word">
+                      <div className="font-mono font-bold text-white text-xs tracking-tight break-all">
                         {formData.nomorSurat || "Menunggu Input..."}
                       </div>
                     </div>
@@ -929,16 +928,16 @@ const App = () => {
               </div>  
             </div>
 
-            <div className="px-6 md:px-8 py-5 bg-slate-50/80 border-t border-slate-100 flex justify-end items-center gap-4">
-              <button onClick={() => setShowModal(false)} className="text-sm font-medium text-slate-400">
+            <div className="px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex justify-end items-center gap-3">
+              <button onClick={() => setShowModal(false)} className="text-xs font-medium text-slate-400 hover:text-slate-600">
                 Discard
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-3 shadow-lg disabled:opacity-50"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold text-xs flex items-center gap-2 shadow-md disabled:opacity-50"
               >
-                {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                {isSaving ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />}
                 {editingSurat ? 'Simpan Perubahan' : 'Simpan Arsip'}
               </button>
             </div>
