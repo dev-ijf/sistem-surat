@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import AuthLayout from './layout/AuthLayout';
 import {
   Plus, FileText, Settings, Search, Trash2, Edit2,
   X, Inbox, Save, Loader2, WifiOff, Wifi,
@@ -994,4 +995,8 @@ const App = () => {
   );
 };
 
-export default App;
+const TampilanLogin = () => {
+  return <AuthLayout />;
+};
+
+export default TampilanLogin;
