@@ -9,7 +9,7 @@ const { Pool, Client } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const DB_HOST = process.env.DB_HOST || 'localhost';
-const DB_PORT = Number(process.env.DB_PORT || 5432);
+const DB_PORT = Number(process.env.DB_PORT || 5433);
 const DB_USER = process.env.DB_USER || 'postgres';
 const DB_PASSWORD = process.env.DB_PASSWORD || '';
 const DB_NAME = process.env.DB_NAME || 'sistem_surat';
@@ -139,13 +139,22 @@ const initializeDatabase = async () => {
   }
   await adminClient.end();
 */
-  const poolConfig = {
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-  max: 10,
-};
+  const poolConfig = process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ///ssl: {
+        ///  rejectUnauthorized: false,
+        ///},
+        max: 10,
+      }
+    : {
+        host: DB_HOST,
+        port: DB_PORT,
+        user: DB_USER,
+        password: DB_PASSWORD,
+        database: DB_NAME,
+        max: 10,
+      };
 
 pool = new Pool(poolConfig);
 
