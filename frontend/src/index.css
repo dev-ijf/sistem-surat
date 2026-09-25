@@ -107,3 +107,20 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+@keyframes wordGlow {
+    0%, 40%, 100% { 
+        opacity: 0.4; 
+        text-shadow: none; 
+    }
+    15% { 
+        opacity: 1; 
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.8); 
+    }
+}
+
+.animate-word {
+    margin-right: .3em;
+    animation: wordGlow 4s ease-in-out infinite;
+    display: inline-block;
+}
