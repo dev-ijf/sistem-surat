@@ -4,7 +4,8 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Pool, Client } = require('pg');
+const { pool } = require('./src/config/db');
+const authRoutes = require('./src/routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,11 +15,10 @@ const DB_USER = process.env.DB_USER || 'postgres';
 const DB_PASSWORD = process.env.DB_PASSWORD || '';
 const DB_NAME = process.env.DB_NAME || 'sistem_surat';
 
-let pool;
-
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/auth', authRoutes);
 
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -121,42 +121,6 @@ const createMasterRoutes = (endpoint, table, fields) => {
 };
 
 const initializeDatabase = async () => {
-  const adminConfig = {
-    host: DB_HOST,
-    port: DB_PORT,
-    user: DB_USER,
-    database: 'postgres'
-  };
-  if (DB_PASSWORD !== '') {
-    adminConfig.password = DB_PASSWORD;
-  }
-/** 
-  const adminClient = new Client(adminConfig);
-  await adminClient.connect();
-  const dbExists = await adminClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [DB_NAME]);
-  if (dbExists.rowCount === 0) {
-    await adminClient.query(`CREATE DATABASE "${DB_NAME}"`);
-  }
-  await adminClient.end();
-*/
-  const poolConfig = process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ///ssl: {
-        ///  rejectUnauthorized: false,
-        ///},
-        max: 10,
-      }
-    : {
-        host: DB_HOST,
-        port: DB_PORT,
-        user: DB_USER,
-        password: DB_PASSWORD,
-        database: DB_NAME,
-        max: 10,
-      };
-
-pool = new Pool(poolConfig);
 
   await query(`CREATE TABLE IF NOT EXISTS jenis_surat (
     id SERIAL PRIMARY KEY,
@@ -185,6 +149,14 @@ pool = new Pool(poolConfig);
   await query(`CREATE TABLE IF NOT EXISTS kepada_internal (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(255) NOT NULL
+  )`);
+
+  await query(`CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    nama VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    role VARCHAR(50) DEFAULT 'Staff',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
 
   await query(`CREATE TABLE IF NOT EXISTS surat (
@@ -246,6 +218,10 @@ pool = new Pool(poolConfig);
     { nama: 'Divisi Marketing' },
     { nama: 'Divisi Operasional' }
   ], ['nama']);
+
+  await seedIfEmpty('users', [
+    { nama: 'Admin Surat', email: 'kukies.chocolate@gmail.com', role: 'Admin' }
+  ], ['nama', 'email', 'role']);
 };
 
 app.get('/', (req, res) => {
