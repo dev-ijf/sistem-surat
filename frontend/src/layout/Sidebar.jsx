@@ -1,11 +1,11 @@
 import React from 'react';
-import { LayoutDashboard, Inbox, Send, BarChart2, Users, LogOut} from 'lucide-react';
+import { LayoutDashboard, Send, Users, LogOut } from 'lucide-react';
 
 const Sidebar = ({ activeMenu, setActiveMenu, onLogout, userRole }) => {
   
   const getMenuItemClass = (menuName) => {
     const isActive = activeMenu === menuName;
-    return `flex items-center gap-3 px-3 py-2 mx-3 my-1 rounded-lg cursor-pointer transition-all duration-200 text-sm font-medium ${
+    return `flex items-center gap-3 px-3.5 py-2.5 mx-4 my-1 rounded-lg cursor-pointer transition-all duration-200 text-[15px] font-medium ${
       isActive 
         ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-sm' 
         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -13,7 +13,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, onLogout, userRole }) => {
   };
 
   return (
-    <aside className="w-56 h-screen bg-white border-r border-slate-200 flex flex-col justify-between fixed left-0 top-0 z-50">
+    <aside className="w-full h-full bg-white border-r border-slate-200 flex flex-col justify-between z-50">
       
       <div className="overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none pb-4">
         
@@ -38,42 +38,32 @@ const Sidebar = ({ activeMenu, setActiveMenu, onLogout, userRole }) => {
 
         <div className="flex flex-col mt-3">
           
-          <div className="px-4 mb-2 mt-1">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+          <div className="px-5 mb-2 mt-1">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
               Menu Utama
             </span>
           </div>
           
           <div onClick={() => setActiveMenu('dashboard')} className={getMenuItemClass('dashboard')}>
-            <LayoutDashboard size={18} />
+            <LayoutDashboard size={20} />
             <span>Dashboard</span>
           </div>
           
-          <div onClick={() => setActiveMenu('surat-masuk')} className={getMenuItemClass('surat-masuk')}>
-            <Inbox size={18} />
-            <span>Surat Masuk</span>
-          </div>
-          
           <div onClick={() => setActiveMenu('surat-keluar')} className={getMenuItemClass('surat-keluar')}>
-            <Send size={18} />
+            <Send size={20} />
             <span>Surat Keluar</span>
           </div>
           
-          <div onClick={() => setActiveMenu('laporan')} className={getMenuItemClass('laporan')}>
-            <BarChart2 size={18} />
-            <span>Laporan</span>
-          </div>
-
           {(userRole === 'Admin' || userRole === 'Super Admin') && (
             <>
-              <div className="px-4 mb-2 mt-5">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              <div className="px-5 mb-2 mt-5">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                   Administrator
                 </span>
               </div>
               
               <div onClick={() => setActiveMenu('manajemen-user')} className={getMenuItemClass('manajemen-user')}>
-                <Users size={18} />
+                <Users size={20} />
                 <span>Manajemen User</span>
               </div>
             </>
@@ -81,12 +71,12 @@ const Sidebar = ({ activeMenu, setActiveMenu, onLogout, userRole }) => {
         </div>
       </div>
 
-      <div className="p-3 border-t border-slate-100 shrink-0 bg-white">
+      <div className="p-4 border-t border-slate-100 shrink-0 bg-white">
         <button 
           onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-red-100 text-red-500 rounded-lg hover:bg-red-50 hover:border-red-200 transition-all font-semibold text-sm"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-red-100 text-red-500 rounded-lg hover:bg-red-50 hover:border-red-200 transition-all font-semibold text-[15px]"
         >
-          <LogOut size={16} strokeWidth={2.5} />
+          <LogOut size={18} strokeWidth={2.5} />
           Logout
         </button>
       </div>
