@@ -13,7 +13,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     const hashParts = window.location.hash.replace('#', '').split('/');
     return hashParts[1] || 'daftar';
   });
-  const [activeMasterTab, setActiveMasterTab] = useState('Jenis Surat');
+  const [activeMasterTab] = useState('Jenis Surat');
   const [activeMasterCard, setActiveMasterCard] = useState(() => {
     const hashParts = window.location.hash.replace('#', '').split('/');
     return hashParts[2] ? decodeURIComponent(hashParts[2]) : 'Kategori Surat';
@@ -22,8 +22,14 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   const [showModal, setShowModal] = useState(false);
   const [showMasterModal, setShowMasterModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [templateSelections, setTemplateSelections] = useState({});
+  
+  const [templateOptions, setTemplateOptions] = useState([]);
+  useEffect(() => {
+    fetch(`${API_BASE}/surat/templates`)
+      .then(res => res.json())
+      .then(data => setTemplateOptions(data))
+      .catch(err => console.error('Failed to fetch templates:', err));
+  }, [API_BASE]);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -100,6 +106,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     instansi: '',
     tglSurat: new Date().toISOString().split('T')[0],
     perihal: '',
+    judul: '',
     kategori: 'Biasa',
     nomorSurat: '',
     status: 'Draft',
@@ -117,6 +124,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       const count = (suratList?.length || 0) + 1;
       const short = getShortCode(formData.jenisSurat);
       const num = `${String(count).padStart(3, '0')}/${short}-${formData.dari}/${formData.instansi}/${month}/${year}`;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(prev => ({ ...prev, nomorSurat: num }));
     }
   }, [formData.jenisSurat, formData.dari, formData.instansi, formData.tglSurat, suratList?.length]);
@@ -217,10 +225,12 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       payload.append("dari", dariTrimmed);
       payload.append("instansi", instansiTrimmed);
       payload.append("perihal", perihalTrimmed);
+      payload.append("judul", String(formData.judul || "").trim());
       payload.append("kategori", formData.kategori || "Biasa");
       payload.append("nomorSurat", formData.nomorSurat || "");
       payload.append("status", formData.status || "Draft");
       if (formData.fileSurat) payload.append("fileSurat", formData.fileSurat);
+      if (formData.templateKop && !editingSurat) payload.append("templateKop", formData.templateKop);
 
       const res = await fetch(url, { method, body: payload });
       if (!res.ok) throw new Error("Respon server gagal");
@@ -355,14 +365,6 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                   <Filter size={16} /> Filter
                 </button>
                 <button
-                  onClick={() => {
-                    setTemplateSelections({});
-                    setShowTemplateModal(true);
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-all shadow-sm">
-                  <FileText size={16} /> Template
-                </button>
-                <button
                   onClick={() => { resetForm(); setShowModal(true); }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-sm hover:bg-blue-700 hover:-translate-y-0.5"
                 >
@@ -474,7 +476,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                     <th className="px-4 py-3 text-[10px] uppercase font-bold text-slate-900 tracking-wider">Perihal</th>
                     <th className="px-4 py-3 text-[10px] uppercase font-bold text-slate-900 tracking-wider">Pengirim</th>
                     <th className="px-4 py-3 text-[10px] uppercase font-bold text-slate-900 tracking-wider">Tanggal</th>
-                    <th className="px-4 py-3 text-[10px] uppercase font-bold text-slate-900 tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-[10px] uppercase font-bold text-slate-900 tracking-wider text-center">File</th>
                     <th className="px-4 py-3 text-[10px] uppercase font-bold text-slate-900 tracking-wider text-center">Aksi</th>
                   </tr>
                 </thead>
@@ -517,15 +519,12 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                         <td className="px-4 py-3 text-[13px] text-slate-600 font-medium">
                           {s.tglSurat ? new Date(s.tglSurat).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                         </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${String(s.status || 'Draft').toLowerCase() === 'terkirim'
-                              ? 'bg-blue-100 text-blue-700'
-                              : String(s.status || 'Draft').toLowerCase() === 'selesai'
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : 'bg-amber-100 text-amber-700'
-                            }`}>
-                            {s.status || 'Draft'}
-                          </span>
+                        <td className="px-4 py-3 text-center">
+                          {s.fileSuratPath ? (
+                            <a href={`${API_BASE}/surat/preview/${s.fileSuratPath.split('/').pop().replace('.docx', '.pdf')}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
+                          ) : (
+                            <span className="text-[13px] text-slate-400 italic">Belum ada</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex justify-center gap-2">
@@ -598,7 +597,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       ) : (
         <div>
           <div className="mb-5">
-            <h2 className="text-lg font-semibold text-slate-900">Konfigurasi Referensi</h2>
+            <h2 className="text-lg font-semibold !text-slate-900">Konfigurasi Referensi</h2>
             <p className="mt-1 text-sm text-slate-500">Kelola master data untuk opsi *dropdown* di dalam formulir surat.</p>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
@@ -656,7 +655,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20">
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
-              <h2 className="text-lg font-bold text-slate-900">{editingMaster ? 'Update' : 'New'} {activeMasterCard || activeMasterTab}</h2>
+              <h2 className="text-lg font-bold !text-slate-900">{editingMaster ? 'Update' : 'New'} {activeMasterCard || activeMasterTab}</h2>
               <button onClick={() => setShowMasterModal(false)} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
             </div>
             <div className="p-5 space-y-5">
@@ -682,7 +681,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-white/20">
             <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100">
               <div>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">{editingSurat ? 'Perbarui Arsip' : 'Formulir Surat Baru'}</h2>
+                <h2 className="text-lg font-bold !text-slate-900 tracking-tight">{editingSurat ? 'Perbarui Arsip' : 'Formulir Surat Baru'}</h2>
                 <p className="text-[10px] font-medium text-slate-400 uppercase tracking- mt-0.5">Sinkronisasi data otomatis</p>
               </div>
               <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:text-slate-900 transition-all"><X size={18} /></button>
@@ -691,28 +690,32 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Jenis Surat *</label>
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Jenis Surat <span className="text-red-500">*</span></label>
                     <select className="input-field" value={formData.jenisSurat} onChange={e => setFormData({ ...formData, jenisSurat: e.target.value })}>
                       <option value="">-- Pilih Jenis Surat --</option>
-                      {masterData['Jenis Surat'].map(j => <option key={j.id} value={j.nama}>{j.nama}</option>)}
+                      {masterData['Jenis Surat']?.map(j => <option key={j.id} value={j.nama}>{j.nama}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Dari (Pengirim) *</label>
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Dari (Pengirim) <span className="text-red-500">*</span></label>
                     <select className="input-field" value={formData.dari} onChange={e => setFormData({ ...formData, dari: e.target.value })}>
                       <option value="">-- Pilih Pengirim --</option>
-                      {masterData['Struktur Organisasi'].map(s => <option key={s.id} value={s.nama}>{s.nama} {s.jabatan ? `(${s.jabatan})` : ''}</option>)}
+                      {masterData['Struktur Organisasi']?.map(s => <option key={s.id} value={s.nama}>{s.nama} {s.jabatan ? `(${s.jabatan})` : ''}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Kategori *</label>
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Kategori <span className="text-red-500">*</span></label>
                     <select className="input-field" value={formData.kategori} onChange={e => setFormData({ ...formData, kategori: e.target.value })}>
-                      {masterData['Kategori Surat'].map(k => <option key={k.id} value={k.nama}>{k.nama}</option>)}
+                      {masterData['Kategori Surat']?.map(k => <option key={k.id} value={k.nama}>{k.nama}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Perihal Surat *</label>
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Perihal Surat <span className="text-red-500">*</span></label>
                     <textarea className="input-field min-h-20 resize-none" value={formData.perihal} onChange={e => setFormData({ ...formData, perihal: e.target.value })} placeholder="Ringkasan isi surat..." />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Judul Surat</label>
+                    <textarea className="input-field min-h-20 resize-none" value={formData.judul} onChange={e => setFormData({ ...formData, judul: e.target.value })} placeholder="Judul surat..." />
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -724,25 +727,48 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Instansi *</label>
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Instansi <span className="text-red-500">*</span></label>
                     <select className="input-field" value={formData.instansi} onChange={e => setFormData({ ...formData, instansi: e.target.value })}>
                       <option value="">-- Pilih Instansi --</option>
-                      {masterData['Instansi'].map(i => <option key={i.id} value={i.nama}>{i.nama}</option>)}
+                      {masterData['Instansi']?.map(i => <option key={i.id} value={i.nama}>{i.nama}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Status Surat *</label>
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Status Surat <span className="text-red-500">*</span></label>
                     <select className="input-field" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                       <option value="Draft">Draft</option>
                       <option value="Terkirim">Terkirim</option>
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">Upload Dokumen</label>
-                    <input type="file" className="input-field file:mr-2 file:rounded-md file:border-0 file:bg-blue-50 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-blue-600 text-xs" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFileChange} />
-                    <p className="text-[10px] text-slate-400">Opsional. {formData.fileSuratName ? ` File: ${formData.fileSuratName}` : ''}</p>
-                  </div>
+                  {editingSurat ? (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">Upload Dokumen Final (Opsional)</label>
+                      <input type="file" className="input-field file:mr-2 file:rounded-md file:border-0 file:bg-blue-50 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-blue-600 text-xs" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFileChange} />
+                      <p className="text-[10px] text-slate-400">File lama: {formData.fileSuratName || 'Belum ada'}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">Kop Surat (Template) <span className="text-red-500">*</span></label>
+                      <select 
+                        className="input-field" 
+                        value={formData.templateKop || ''} 
+                        onChange={e => setFormData({ ...formData, templateKop: e.target.value })}
+                      >
+                        <option value="">{formData.instansi ? '-- Pilih Kop Surat --' : '-- Pilih Instansi Dahulu --'}</option>
+                        {templateOptions
+                          .filter(t => {
+                            if (!formData.instansi) return false;
+                            const keywords = formData.instansi.toLowerCase().split(' ').filter(w => w.length > 2);
+                            return keywords.some(kw => t.toLowerCase().includes(kw));
+                          })
+                          .map((t, idx) => (
+                            <option key={idx} value={t}>{t.replace('.docx', '')}</option>
+                          ))
+                        }
+                      </select>
+                    </div>
+                  )}
                   <div className="pt-1">
                     <div className="p-3 bg-slate-900 rounded-xl text-center shadow-sm relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-2 opacity-10"><Hash size={36} className="text-white" /></div>
@@ -766,42 +792,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
 
 
-      {showTemplateModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col border border-white/20">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
-              <h2 className="text-lg font-bold text-slate-900">Template Surat</h2>
-              <button onClick={() => setShowTemplateModal(false)} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-hide">
-              {Object.keys(masterData).map((key) => (
-                <div key={key} className="space-y-1.5">
-                  <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 block">{key}</label>
-                  <select
-                    className="input-field text-sm py-2 bg-slate-50 border-slate-200"
-                    value={templateSelections[key] || ''}
-                    onChange={(e) => setTemplateSelections(prev => ({ ...prev, [key]: e.target.value }))}
-                  >
-                    <option value="">-- Pilih {key} --</option>
-                    {(masterData[key] || []).map((item, idx) => (
-                      <option key={item.id || idx} value={item.nama}>{item.nama} {item.jabatan ? `(${item.jabatan})` : ''}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-            <div className="p-5 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-3">
-              <button onClick={() => setShowTemplateModal(false)} className="text-sm font-medium text-slate-700 bg-white border border-slate-300 px-5 py-2 rounded-xl hover:bg-slate-50 transition-all shadow-sm">Batal</button>
-              <button
-                disabled={Object.keys(masterData).length === 0 || Object.keys(masterData).some(key => !templateSelections[key])}
-                className="bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold text-sm shadow-sm hover:bg-blue-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download size={16} /> Download Template
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </>
   );
 };

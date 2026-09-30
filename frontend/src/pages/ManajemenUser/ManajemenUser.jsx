@@ -70,6 +70,7 @@ const ManajemenUser = ({ globalSearch }) => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
   }, []);
 
@@ -309,7 +310,7 @@ const ManajemenUser = ({ globalSearch }) => {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-slate-800">Tambah User</h3>
+                <h2 className="text-lg font-bold !text-slate-900 tracking-tight">Tambah User</h2>
                 <p className="text-sm text-slate-500">Tambahkan pengguna baru</p>
               </div>
               <button
@@ -414,7 +415,7 @@ const ManajemenUser = ({ globalSearch }) => {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-slate-800">Edit User</h3>
+                <h2 className="text-lg font-bold !text-slate-900 tracking-tight">Edit User</h2>
                 <p className="text-sm text-slate-500">Perbarui informasi pengguna</p>
               </div>
               <button
@@ -519,7 +520,7 @@ const ManajemenUser = ({ globalSearch }) => {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-slate-800">Hapus User</h3>
+                <h2 className="text-lg font-bold !text-slate-900 tracking-tight">Hapus User</h2>
                 <p className="text-sm text-slate-500">Konfirmasi penghapusan data</p>
               </div>
               <button

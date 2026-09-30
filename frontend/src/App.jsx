@@ -23,12 +23,6 @@ const getApiBase = () => {
 
 const API_BASE = getApiBase();
 
-const getShortCode = (value) => {
-  const words = String(value || '').trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return '';
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return words.slice(0, 2).map(word => word[0]).join('').toUpperCase();
-};
 
 const App = () => {
   const [user, setUser] = useState(() => {
@@ -56,7 +50,7 @@ const App = () => {
 
 
 
-  const fetchData = useCallback(async (retryCount = 0) => {
+  const fetchData = useCallback(async function doFetch(retryCount = 0) {
     setIsLoading(true);
     try {
       const fetchOptions = { method: 'GET', headers: { 'Accept': 'application/json' }, mode: 'cors' };
@@ -91,9 +85,9 @@ const App = () => {
       }));
 
       setIsConnected(true);
-    } catch (err) {
+    } catch {
       setIsConnected(false);
-      if (retryCount < 2) setTimeout(() => fetchData(retryCount + 1), 2000);
+      if (retryCount < 2) setTimeout(() => doFetch(retryCount + 1), 2000);
     } finally {
       setIsLoading(false);
     }

@@ -21,9 +21,7 @@ export default function AuthLayout() {
         setSelectedRole(role);
     };
 
-    const handleBackToRoles = () => {
-        window.history.back();
-    };
+
 
     const sendTokenToBackend = async (accessToken) => {
         try {
