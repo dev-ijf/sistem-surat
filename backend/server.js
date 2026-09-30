@@ -4,8 +4,29 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const PizZip = require('pizzip');
+const Docxtemplater = require('docxtemplater');
+const { exec } = require('child_process');
 const { pool } = require('./src/config/db');
 const authRoutes = require('./src/routes/authRoutes');
+
+const convertToPdf = (inputPath, outputPath) => {
+  return new Promise((resolve, reject) => {
+    // Escape single quotes just in case
+    const safeInput = path.resolve(inputPath).replace(/'/g, "''");
+    const safeOutput = path.resolve(outputPath).replace(/'/g, "''");
+    const psCommand = `$word = New-Object -ComObject Word.Application; $word.Visible = $false; $doc = $word.Documents.Open('${safeInput}'); $doc.SaveAs([ref] '${safeOutput}', [ref] 17); $doc.Close(); $word.Quit();`;
+    
+    exec(`powershell -Command "${psCommand}"`, (error, stdout, stderr) => {
+      if (error) {
+        console.error('PDF Conversion Error:', error);
+        resolve(false);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+};
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,7 +38,7 @@ const DB_NAME = process.env.DB_NAME || 'sistem_surat';
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 
 const uploadDir = path.join(__dirname, 'uploads');
@@ -168,6 +189,7 @@ const initializeDatabase = async () => {
     dari VARCHAR(255) DEFAULT '',
     instansi VARCHAR(255) DEFAULT '',
     perihal TEXT,
+    judul TEXT,
     kategori VARCHAR(255) DEFAULT 'Biasa',
     nomorSurat VARCHAR(255) DEFAULT '',
     status VARCHAR(100) DEFAULT 'Draft',
@@ -245,6 +267,15 @@ createMasterRoutes('kategori', 'kategori_surat', ['nama', 'deskripsi']);
 createMasterRoutes('instansi', 'instansi', ['nama']);
 createMasterRoutes('kepada', 'kepada_internal', ['nama']);
 
+app.get('/api/surat/templates', (req, res) => {
+  const templateDir = path.join(__dirname, 'templates');
+  if (!fs.existsSync(templateDir)) {
+    return res.json([]);
+  }
+  const files = fs.readdirSync(templateDir).filter(f => f.endsWith('.docx'));
+  res.json(files);
+});
+
 app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
   try {
     const {
@@ -253,19 +284,71 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
       tglSurat = '',
       dari = '',
       perihal = '',
+      judul = '',
       kategori = 'Biasa',
       nomorSurat = '',
       status = 'Draft',
       instansi = '',
-      penyimpananFisik = ''
+      penyimpananFisik = '',
+      templateKop = ''
     } = req.body;
 
-    const fileSuratName = req.file ? req.file.originalname : '';
-    const fileSuratPath = req.file ? `/uploads/${req.file.filename}` : '';
+    let fileSuratName = req.file ? req.file.originalname : '';
+    let fileSuratPath = req.file ? `/uploads/${req.file.filename}` : '';
+
+    if (!req.file && templateKop) {
+      try {
+        const templatePath = path.join(__dirname, 'templates', templateKop);
+        if (fs.existsSync(templatePath)) {
+          const content = fs.readFileSync(templatePath, 'binary');
+          const zip = new PizZip(content);
+          const doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+            delimiters: { start: '{{', end: '}}' }
+          });
+
+          doc.render({
+            tujuan: tujuan,
+            jenisSurat: jenisSurat,
+            tglSurat: tglSurat,
+            dari: dari,
+            perihal: perihal,
+            judul: judul,
+            kategori: kategori,
+            nomorSurat: nomorSurat,
+            instansi: instansi
+          });
+
+          const buf = doc.getZip().generate({
+            type: 'nodebuffer',
+            compression: 'DEFLATE',
+          });
+
+          const generatedFilename = `Surat-${Date.now()}.docx`;
+          const generatedPath = path.join(__dirname, 'uploads', generatedFilename);
+          fs.writeFileSync(generatedPath, buf);
+
+          fileSuratName = generatedFilename;
+          fileSuratPath = `/uploads/${generatedFilename}`;
+
+          // Create PDF preview
+          const pdfFilename = generatedFilename.replace('.docx', '.pdf');
+          const pdfPath = path.join(__dirname, 'uploads', pdfFilename);
+          convertToPdf(generatedPath, pdfPath).catch(console.error);
+        }
+      } catch (err) {
+        console.error('Error generating docx:', err);
+      }
+    } else if (req.file && req.file.filename.endsWith('.docx')) {
+      const pdfFilename = req.file.filename.replace('.docx', '.pdf');
+      const pdfPath = path.join(__dirname, 'uploads', pdfFilename);
+      convertToPdf(req.file.path, pdfPath).catch(console.error);
+    }
 
     const inserted = await pool.query(
-      'INSERT INTO surat (tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *',
-      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath]
+      'INSERT INTO surat (tujuan, jenisSurat, tglSurat, dari, instansi, perihal, judul, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
+      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, judul, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath]
     );
 
     res.status(201).json(mapSuratRow(inserted.rows[0]));
@@ -290,6 +373,7 @@ app.put('/api/surat/:id', upload.single('fileSurat'), async (req, res) => {
       tglSurat = surat.tglSurat,
       dari = surat.dari,
       perihal = surat.perihal,
+      judul = surat.judul,
       kategori = surat.kategori,
       nomorSurat = surat.nomorSurat,
       status = surat.status,
@@ -300,15 +384,60 @@ app.put('/api/surat/:id', upload.single('fileSurat'), async (req, res) => {
     const fileSuratName = req.file ? req.file.originalname : surat.fileSuratName;
     const fileSuratPath = req.file ? `/uploads/${req.file.filename}` : surat.fileSuratPath;
 
+    if (req.file && req.file.filename.endsWith('.docx')) {
+      const pdfFilename = req.file.filename.replace('.docx', '.pdf');
+      const pdfPath = path.join(__dirname, 'uploads', pdfFilename);
+      convertToPdf(req.file.path, pdfPath).catch(console.error);
+    }
+
     const updated = await pool.query(
-      'UPDATE surat SET tujuan = $1, jenisSurat = $2, tglSurat = $3, dari = $4, instansi = $5, perihal = $6, kategori = $7, nomorSurat = $8, status = $9, penyimpananFisik = $10, fileSuratName = $11, fileSuratPath = $12 WHERE id = $13 RETURNING *',
-      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, id]
+      'UPDATE surat SET tujuan = $1, jenisSurat = $2, tglSurat = $3, dari = $4, instansi = $5, perihal = $6, judul = $7, kategori = $8, nomorSurat = $9, status = $10, penyimpananFisik = $11, fileSuratName = $12, fileSuratPath = $13 WHERE id = $14 RETURNING *',
+      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, judul, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, id]
     );
 
     res.json(mapSuratRow(updated.rows[0]));
   } catch (err) {
     console.error('PUT /api/surat/:id error', err);
     res.status(500).json({ message: 'Gagal memperbarui surat.' });
+  }
+});
+
+app.get('/api/surat/preview/:filename', async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    if (!filename.endsWith('.pdf')) {
+      return res.status(400).send('Only PDF preview is supported');
+    }
+
+    const docxFilename = filename.replace('.pdf', '.docx');
+    const pdfPath = path.join(__dirname, 'uploads', filename);
+    const docxPath = path.join(__dirname, 'uploads', docxFilename);
+
+    // If PDF already exists, send it
+    if (fs.existsSync(pdfPath)) {
+      res.contentType('application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="' + filename + '"');
+      return res.sendFile(pdfPath);
+    }
+
+    // If DOCX exists but no PDF, convert it on the fly
+    if (fs.existsSync(docxPath)) {
+      try {
+        await convertToPdf(docxPath, pdfPath);
+        if (fs.existsSync(pdfPath)) {
+          res.contentType('application/pdf');
+          res.setHeader('Content-Disposition', 'inline; filename="' + filename + '"');
+          return res.sendFile(pdfPath);
+        }
+      } catch (e) {
+        console.error('On-the-fly PDF conversion failed', e);
+      }
+    }
+
+    res.status(404).send('File not found');
+  } catch (err) {
+    console.error('Preview error', err);
+    res.status(500).send('Internal Server Error');
   }
 });
 
