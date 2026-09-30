@@ -56,15 +56,12 @@ body {
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 h1,
@@ -109,4 +106,21 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+@keyframes wordGlow {
+    0%, 40%, 100% { 
+        opacity: 0.4; 
+        text-shadow: none; 
+    }
+    15% { 
+        opacity: 1; 
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.8); 
+    }
+}
+
+.animate-word {
+    margin-right: .3em;
+    animation: wordGlow 4s ease-in-out infinite;
+    display: inline-block;
 }
