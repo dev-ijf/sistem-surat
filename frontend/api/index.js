@@ -323,7 +323,7 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
       templateKop = ''
     } = req.body;
 
-    const fileSuratName = req.file ? req.file.originalname : '';
+    const fileSuratName = req.file ? req.file.originalname : (templateKop ? templateKop : '');
     const fileSuratPath = req.file ? `/uploads/${req.file.filename}` : '';
 
     const inserted = await pool.query(
@@ -395,7 +395,7 @@ app.put('/api/surat/:id', upload.single('fileSurat'), async (req, res) => {
       penyimpananFisik = surat.penyimpananFisik
     } = req.body;
 
-    const fileSuratName = req.file ? req.file.originalname : surat.fileSuratName;
+    const fileSuratName = req.file ? req.file.originalname : (req.body.templateKop ? req.body.templateKop : surat.fileSuratName);
     const fileSuratPath = req.file ? `/uploads/${req.file.filename}` : surat.fileSuratPath;
 
     const updated = await pool.query(
