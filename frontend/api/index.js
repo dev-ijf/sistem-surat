@@ -425,7 +425,7 @@ app.delete('/api/surat/:id', async (req, res) => {
   }
 });
 
-app.get('/api/surat/preview-template/:id/:filename?', async (req, res) => {
+app.get(['/api/surat/preview-template/:id', '/api/surat/preview-template/:id/:filename'], async (req, res) => {
   try {
     const id = Number(req.params.id);
     const rows = await pool.query('SELECT * FROM surat WHERE id = $1', [id]);
