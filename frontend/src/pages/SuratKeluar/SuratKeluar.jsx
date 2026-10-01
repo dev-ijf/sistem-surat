@@ -135,6 +135,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     if (category === 'Kategori Surat') return 'kategori';
     if (category === 'Instansi') return 'instansi';
     if (category === 'Kepada (Internal)') return 'kepada';
+    if (category === 'Kop Surat') return 'kopsurat';
     return null;
   };
 
@@ -143,6 +144,28 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
     const category = activeMasterCard || activeMasterTab;
     const endpoint = getMasterEndpoint(category);
+
+    if (category === 'Kop Surat') {
+      try {
+        const method = editingMaster ? 'PUT' : 'POST';
+        const url = editingMaster ? `${API_BASE}/setting/${endpoint}/${editingMaster.id}` : `${API_BASE}/setting/${endpoint}`;
+        const formData = new FormData();
+        formData.append("nama", masterForm.nama);
+        if (masterForm.fileTemplate) formData.append("fileTemplate", masterForm.fileTemplate);
+        
+        const res = await fetch(url, { method, body: formData });
+        if (!res.ok) throw new Error("Gagal menyimpan template");
+        
+        await fetchData();
+        setShowMasterModal(false);
+        setEditingMaster(null);
+        setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null });
+      } catch (err) {
+        alert(`Koneksi gagal: Gagal menyimpan data template.`);
+      }
+      return;
+    }
+
     const payload = {
       nama: masterForm.nama,
       deskripsi: masterForm.deskripsi || '',
@@ -160,7 +183,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       }
       setShowMasterModal(false);
       setEditingMaster(null);
-      setMasterForm({ nama: '', deskripsi: '', jabatan: '' });
+      setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null });
       return;
     }
 
@@ -172,7 +195,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       await fetchData();
       setShowMasterModal(false);
       setEditingMaster(null);
-      setMasterForm({ nama: '', deskripsi: '', jabatan: '' });
+      setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null });
     } catch {
       alert(`Koneksi gagal: Pastikan endpoint backend ${API_BASE} sudah tersedia.`);
     }
@@ -633,7 +656,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                     onClick={() => {
                       setActiveMasterCard(card.key);
                       setEditingMaster(null);
-                      setMasterForm({ nama: '', deskripsi: '', jabatan: '' });
+                      setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null });
                       setShowMasterModal(true);
                     }}
                     className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm"
@@ -650,7 +673,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                           {(item.deskripsi || item.jabatan) && <div className="mt-0.5 text-[11px] text-slate-500">{item.deskripsi || item.jabatan}</div>}
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <button onClick={() => { setActiveMasterCard(card.key); setEditingMaster(item); setMasterForm({ nama: item.nama || '', deskripsi: item.deskripsi || '', jabatan: item.jabatan || '' }); setShowMasterModal(true); }} className="rounded-md p-1.5 text-slate-400 bg-white border border-slate-200 shadow-sm hover:text-blue-600 hover:border-blue-200 transition-all">
+                          <button onClick={() => { setActiveMasterCard(card.key); setEditingMaster(item); setMasterForm({ nama: item.nama || '', deskripsi: item.deskripsi || '', jabatan: item.jabatan || '', fileTemplate: null }); setShowMasterModal(true); }} className="rounded-md p-1.5 text-slate-400 bg-white border border-slate-200 shadow-sm hover:text-blue-600 hover:border-blue-200 transition-all">
                             <Edit2 size={12} />
                           </button>
                           <button onClick={() => handleDeleteMaster(item, card.key)} className="rounded-md p-1.5 text-slate-400 bg-white border border-slate-200 shadow-sm hover:text-red-500 hover:border-red-200 transition-all">
@@ -679,10 +702,18 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                 <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">Nama Referensi</label>
                 <input className="input-field" value={masterForm.nama} onChange={e => setMasterForm({ ...masterForm, nama: e.target.value })} placeholder="Input nama..." />
               </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">{(activeMasterCard || activeMasterTab) === 'Struktur Organisasi' ? 'Jabatan / Divisi' : 'Keterangan'}</label>
-                <input className="input-field" value={(activeMasterCard || activeMasterTab) === 'Struktur Organisasi' ? masterForm.jabatan : masterForm.deskripsi} onChange={e => setMasterForm({ ...masterForm, [(activeMasterCard || activeMasterTab) === 'Struktur Organisasi' ? 'jabatan' : 'deskripsi']: e.target.value })} placeholder="..." />
-              </div>
+              {(activeMasterCard || activeMasterTab) === 'Kop Surat' ? (
+                <div className="space-y-2">
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">Upload Template (.docx)</label>
+                  <input type="file" className="input-field file:mr-2 file:rounded-md file:border-0 file:bg-slate-100 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-slate-600 text-xs" accept=".docx" onChange={e => setMasterForm({ ...masterForm, fileTemplate: e.target.files?.[0] || null })} />
+                  {editingMaster && editingMaster.file_path && <p className="text-[10px] text-slate-400 mt-1">File saat ini: {editingMaster.file_path}</p>}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">{(activeMasterCard || activeMasterTab) === 'Struktur Organisasi' ? 'Jabatan / Divisi' : 'Keterangan'}</label>
+                  <input className="input-field" value={(activeMasterCard || activeMasterTab) === 'Struktur Organisasi' ? masterForm.jabatan : masterForm.deskripsi} onChange={e => setMasterForm({ ...masterForm, [(activeMasterCard || activeMasterTab) === 'Struktur Organisasi' ? 'jabatan' : 'deskripsi']: e.target.value })} placeholder="..." />
+                </div>
+              )}
             </div>
             <div className="p-5 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-3">
               <button onClick={() => setShowMasterModal(false)} className="text-sm font-medium text-slate-400">Cancel</button>

@@ -295,7 +295,93 @@ createMasterRoutes('internal', 'internal', ['nama', 'jabatan']);
 createMasterRoutes('kategori', 'kategori_surat', ['nama', 'deskripsi']);
 createMasterRoutes('instansi', 'instansi', ['nama']);
 createMasterRoutes('kepada', 'kepada_internal', ['nama']);
-createMasterRoutes('kopsurat', 'kopsurat', ['nama', 'file_path']);
+
+
+app.get('/api/setting/kopsurat', async (req, res) => {
+  try {
+    const rows = await query('SELECT * FROM kopsurat ORDER BY id');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data.' });
+  }
+});
+
+app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res) => {
+  try {
+    let { nama } = req.body;
+    if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
+    
+    let filePath = '';
+    if (req.file) {
+      const newPath = path.join(uploadDir, nama);
+      fs.renameSync(req.file.path, newPath);
+      filePath = nama;
+    }
+    
+    const inserted = await pool.query(
+      'INSERT INTO kopsurat (nama, file_path) VALUES ($1, $2) RETURNING *',
+      [nama, filePath]
+    );
+    res.json(inserted.rows ? inserted.rows[0] : inserted[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menyimpan data' });
+  }
+});
+
+app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    let { nama } = req.body;
+    if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
+    
+    const existing = await query('SELECT * FROM kopsurat WHERE id = $1', [id]);
+    const ext = existing[0] || (existing.rows && existing.rows[0]);
+    let filePath = ext?.file_path || '';
+    
+    if (req.file) {
+      const newPath = path.join(uploadDir, nama);
+      fs.renameSync(req.file.path, newPath);
+      filePath = nama;
+    } else if (ext?.nama && ext.nama !== nama && filePath) {
+      const oldPath = path.join(uploadDir, ext.nama);
+      const newPath = path.join(uploadDir, nama);
+      if (fs.existsSync(oldPath)) {
+        fs.renameSync(oldPath, newPath);
+      }
+      filePath = nama;
+    }
+    
+    const updated = await pool.query(
+      'UPDATE kopsurat SET nama = $1, file_path = $2 WHERE id = $3 RETURNING *',
+      [nama, filePath, id]
+    );
+    res.json(updated.rows ? updated.rows[0] : updated[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal update data' });
+  }
+});
+
+app.delete('/api/setting/kopsurat/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const existing = await query('SELECT * FROM kopsurat WHERE id = $1', [id]);
+    const ext = existing[0] || (existing.rows && existing.rows[0]);
+    if (ext && ext.file_path) {
+      const physicalPath = path.join(uploadDir, ext.file_path);
+      if (fs.existsSync(physicalPath)) {
+        fs.unlinkSync(physicalPath);
+      }
+    }
+    await pool.query('DELETE FROM kopsurat WHERE id = $1', [id]);
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal hapus data' });
+  }
+});
 
 app.get('/api/surat/templates', async (req, res) => {
   try {
@@ -336,7 +422,8 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
         
         
         path.join(__dirname, 'templates', templateKop),
-        path.join(process.cwd(), 'api/templates', templateKop)
+        path.join(process.cwd(), 'api/templates', templateKop),
+        path.join(uploadDir, templateKop)
       ];
 
       let templatePath = null;
@@ -437,7 +524,8 @@ app.get(['/api/surat/preview-template/:id', '/api/surat/preview-template/:id/:fi
     const templateKop = surat.filesuratname;
     const dirsToTry = [
       path.join(__dirname, 'templates', templateKop),
-      path.join(process.cwd(), 'api/templates', templateKop)
+      path.join(process.cwd(), 'api/templates', templateKop),
+      path.join(uploadDir, templateKop)
     ];
 
     let templatePath = null;
