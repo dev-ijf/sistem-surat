@@ -22,6 +22,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   const [showModal, setShowModal] = useState(false);
   const [showMasterModal, setShowMasterModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [deleteModalConfig, setDeleteModalConfig] = useState({ isOpen: false, title: '', targetName: '', onConfirm: null });
 
   const templateOptions = (masterData['Kop Surat'] || []).map(k => k.nama);
 
@@ -177,25 +178,32 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     }
   };
 
-  const handleDeleteMaster = async (item, categoryOverride) => {
+  const handleDeleteMaster = (item, categoryOverride) => {
     const category = categoryOverride || activeMasterCard || activeMasterTab;
     const endpoint = getMasterEndpoint(category);
 
     if (!item?.id) return;
-    if (!window.confirm(`Hapus "${item.nama}" dari ${category}?`)) return;
+    
+    setDeleteModalConfig({
+      isOpen: true,
+      title: 'Konfirmasi Hapus',
+      targetName: `"${item.nama}" dari ${category}`,
+      onConfirm: async () => {
+        setDeleteModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (!endpoint) {
+          setMasterData(prev => ({ ...prev, [category]: prev[category].filter(i => i.id !== item.id) }));
+          return;
+        }
 
-    if (!endpoint) {
-      setMasterData(prev => ({ ...prev, [category]: prev[category].filter(i => i.id !== item.id) }));
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/setting/${endpoint}/${item.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error("Gagal menghapus master data");
-      await fetchData();
-    } catch {
-      alert("Gagal menghapus master data.");
-    }
+        try {
+          const res = await fetch(`${API_BASE}/setting/${endpoint}/${item.id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error("Gagal menghapus master data");
+          await fetchData();
+        } catch {
+          alert("Gagal menghapus master data.");
+        }
+      }
+    });
   };
 
   const handleSave = async () => {
@@ -245,15 +253,22 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     }
   };
 
-  const handleDeleteSurat = async (id) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus arsip surat ini?")) return;
-    try {
-      const res = await fetch(`${API_BASE}/surat/${id}`, { method: 'DELETE' });
-      if (!res.ok) return alert("Gagal menghapus: Server memberikan respon negatif.");
-      await fetchData();
-    } catch {
-      alert("Koneksi terputus ke server.");
-    }
+  const handleDeleteSurat = (id) => {
+    setDeleteModalConfig({
+      isOpen: true,
+      title: 'Hapus Arsip Surat',
+      targetName: 'arsip surat ini',
+      onConfirm: async () => {
+        setDeleteModalConfig(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_BASE}/surat/${id}`, { method: 'DELETE' });
+          if (!res.ok) return alert("Gagal menghapus: Server memberikan respon negatif.");
+          await fetchData();
+        } catch {
+          alert("Koneksi terputus ke server.");
+        }
+      }
+    });
   };
 
   const handleFileChange = (e) => {
@@ -795,6 +810,27 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
 
 
+
+      {deleteModalConfig.isOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-white/20">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
+              <h2 className="text-lg font-bold text-red-600">{deleteModalConfig.title}</h2>
+              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-slate-600 text-center">
+                Apakah Anda yakin ingin menghapus <strong>{deleteModalConfig.targetName}</strong>?<br/>
+                <span className="text-xs text-red-500 mt-2 block">Tindakan ini tidak dapat dibatalkan.</span>
+              </p>
+            </div>
+            <div className="p-5 bg-slate-50/80 border-t border-slate-100 flex justify-center gap-3">
+              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-500 px-4 py-2 hover:bg-slate-200 rounded-xl transition-all">Batal</button>
+              <button onClick={deleteModalConfig.onConfirm} className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl font-semibold text-sm transition-all shadow-sm">Hapus</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );
