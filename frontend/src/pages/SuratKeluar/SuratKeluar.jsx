@@ -235,10 +235,25 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       const res = await fetch(url, { method, body: payload });
       if (!res.ok) throw new Error("Respon server gagal");
 
+      const disposition = res.headers.get('Content-Disposition');
+      if (disposition && disposition.includes('attachment')) {
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        const filenameMatch = disposition.match(/filename="?([^"]+)"?/);
+        a.download = filenameMatch ? filenameMatch[1] : 'Surat.docx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+      }
+
       await fetchData();
       setShowModal(false);
       resetForm();
-    } catch {
+    } catch (err) {
+      console.error(err);
       alert(`Gagal menyimpan data.`);
     } finally {
       setIsSaving(false);
