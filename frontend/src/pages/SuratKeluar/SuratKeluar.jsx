@@ -531,7 +531,14 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                         </td>
                         <td className="px-4 py-3 text-center">
                           {s.fileSuratPath ? (
-                            <a href={`${API_BASE}/surat/preview/${s.fileSuratPath.split('/').pop().replace('.docx', '.pdf')}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
+                            <div className="flex flex-col items-center gap-1">
+                              <a href={`${API_BASE}/surat/preview/${s.fileSuratPath.split('/').pop().replace('.docx', '.pdf')}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
+                              <span className="text-[10px] text-slate-500 max-w-[120px] truncate" title={s.fileSuratName}>{s.fileSuratName}</span>
+                            </div>
+                          ) : s.fileSuratName ? (
+                            <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 block max-w-[120px] truncate mx-auto" title={s.fileSuratName}>
+                              Dari Template
+                            </span>
                           ) : (
                             <span className="text-[13px] text-slate-400 italic">Belum ada</span>
                           )}
