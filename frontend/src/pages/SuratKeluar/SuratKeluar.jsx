@@ -524,7 +524,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                           {s.fileSuratPath ? (
                             <a href={`${API_BASE}/surat/preview/${s.fileSuratPath.split('/').pop().replace('.docx', '.pdf')}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
                           ) : s.fileSuratName ? (
-                            <a href={`https://docs.google.com/viewer?url=${encodeURIComponent(`${API_BASE}/surat/preview-template/${s.id}`)}&embedded=true`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
+                            <a href={`https://docs.google.com/viewer?url=${encodeURIComponent((API_BASE.startsWith('/') ? window.location.origin + API_BASE : API_BASE) + `/surat/preview-template/${s.id}`)}&embedded=true`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
                           ) : (
                             <span className="text-[13px] text-slate-400 italic">Belum ada</span>
                           )}
