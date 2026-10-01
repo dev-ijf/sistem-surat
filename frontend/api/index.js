@@ -5,6 +5,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { Pool, Client } = require('pg');
+const PizZip = require('pizzip');
+const Docxtemplater = require('docxtemplater');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -133,33 +135,33 @@ const initializeDatabase = async () => {
   if (DB_PASSWORD !== '') {
     adminConfig.password = DB_PASSWORD;
   }
-/** 
-  const adminClient = new Client(adminConfig);
-  await adminClient.connect();
-  const dbExists = await adminClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [DB_NAME]);
-  if (dbExists.rowCount === 0) {
-    await adminClient.query(`CREATE DATABASE "${DB_NAME}"`);
-  }
-  await adminClient.end();
-*/
+  /** 
+    const adminClient = new Client(adminConfig);
+    await adminClient.connect();
+    const dbExists = await adminClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [DB_NAME]);
+    if (dbExists.rowCount === 0) {
+      await adminClient.query(`CREATE DATABASE "${DB_NAME}"`);
+    }
+    await adminClient.end();
+  */
   const poolConfig = process.env.DATABASE_URL
     ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false,
-        },
-        max: 10,
-      }
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+      max: 10,
+    }
     : {
-        host: DB_HOST,
-        port: DB_PORT,
-        user: DB_USER,
-        password: DB_PASSWORD,
-        database: DB_NAME,
-        max: 10,
-      };
+      host: DB_HOST,
+      port: DB_PORT,
+      user: DB_USER,
+      password: DB_PASSWORD,
+      database: DB_NAME,
+      max: 10,
+    };
 
-pool = new Pool(poolConfig);
+  pool = new Pool(poolConfig);
 
   await query(`CREATE TABLE IF NOT EXISTS jenis_surat (
     id SERIAL PRIMARY KEY,
@@ -188,6 +190,12 @@ pool = new Pool(poolConfig);
   await query(`CREATE TABLE IF NOT EXISTS kepada_internal (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(255) NOT NULL
+  )`);
+
+  await query(`CREATE TABLE IF NOT EXISTS kopsurat (
+    id SERIAL PRIMARY KEY,
+    nama VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) DEFAULT ''
   )`);
 
   await query(`CREATE TABLE IF NOT EXISTS surat (
@@ -249,6 +257,18 @@ pool = new Pool(poolConfig);
     { nama: 'Divisi Marketing' },
     { nama: 'Divisi Operasional' }
   ], ['nama']);
+
+  await seedIfEmpty('kopsurat', [
+    { nama: 'Kop Surat Akademi Insan Mulia.docx' },
+    { nama: 'Kop Surat Indonesia Juara.docx' },
+    { nama: 'Kop Surat Kreativa Education Network.docx' },
+    { nama: 'Kop Surat Kreativa Global School  729 jatisari.docx' },
+    { nama: 'Kop Surat Kreativa Global School 668.docx' },
+    { nama: 'Kop Surat Kreativa Global School No.39.docx' },
+    { nama: 'Kop Surat Kreativa Global School.docx' },
+    { nama: 'Kop Surat Kreativa Insan Mulia.docx' },
+    { nama: 'Kop Surat Talenta Juara.docx' }
+  ], ['nama']);
 };
 
 app.get('/', (req, res) => {
@@ -276,6 +296,16 @@ createMasterRoutes('internal', 'internal', ['nama', 'jabatan']);
 createMasterRoutes('kategori', 'kategori_surat', ['nama', 'deskripsi']);
 createMasterRoutes('instansi', 'instansi', ['nama']);
 createMasterRoutes('kepada', 'kepada_internal', ['nama']);
+createMasterRoutes('kopsurat', 'kopsurat', ['nama', 'file_path']);
+
+app.get('/api/surat/templates', async (req, res) => {
+  try {
+    const rows = await query('SELECT nama FROM kopsurat ORDER BY id');
+    res.json(rows.map(r => r.nama));
+  } catch (err) {
+    res.status(500).json({ message: 'Gagal mengambil templates.' });
+  }
+});
 
 app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
   try {
@@ -286,19 +316,56 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
       dari = '',
       perihal = '',
       kategori = 'Biasa',
+      judul = '',
       nomorSurat = '',
       status = 'Draft',
       instansi = '',
-      penyimpananFisik = ''
+      penyimpananFisik = '',
+      templateKop = ''
     } = req.body;
 
     const fileSuratName = req.file ? req.file.originalname : '';
     const fileSuratPath = req.file ? `/uploads/${req.file.filename}` : '';
 
     const inserted = await pool.query(
-      'INSERT INTO surat (tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *',
-      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath]
+      'INSERT INTO surat (tujuan, jenisSurat, tglSurat, dari, instansi, perihal, judul, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
+      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, judul, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath]
     );
+
+    if (!req.file && templateKop) {
+      const dirsToTry = [
+        path.join(process.cwd(), 'backend/templates', templateKop),
+        path.join(__dirname, '../backend/templates', templateKop),
+        path.join(__dirname, 'templates', templateKop),
+        path.join(process.cwd(), 'api/templates', templateKop)
+      ];
+
+      let templatePath = null;
+      for (const tPath of dirsToTry) {
+        if (fs.existsSync(tPath)) {
+          templatePath = tPath;
+          break;
+        }
+      }
+
+      if (templatePath) {
+        try {
+          const content = fs.readFileSync(templatePath, 'binary');
+          const zip = new PizZip(content);
+          const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, delimiters: { start: '{{', end: '}}' } });
+          doc.render({ tujuan, jenisSurat, tglSurat, dari, perihal, judul, kategori, nomorSurat, instansi });
+          
+          const buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
+          const generatedFilename = `Surat-${Date.now()}.docx`;
+          
+          res.setHeader('Content-Disposition', `attachment; filename="${generatedFilename}"`);
+          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+          return res.send(buf);
+        } catch (error) {
+          console.error("Docx generation error:", error);
+        }
+      }
+    }
 
     res.status(201).json(mapSuratRow(inserted.rows[0]));
   } catch (err) {
@@ -390,3 +457,9 @@ async function ensureDatabaseInitialized(req, res, next) {
 }
 
 module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server berjalan di port ${PORT}`);
+  });
+}
