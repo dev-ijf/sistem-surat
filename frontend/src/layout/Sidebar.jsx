@@ -21,7 +21,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, onLogout, userRole }) => {
           
           <div className="flex items-center gap-3 relative z-10">
             <img 
-              src="/public/LOGO-KREATIVA-EDUCATION-NETWORK-01.png" 
+              src="/LOGO-KREATIVA-EDUCATION-NETWORK-01.png" 
               alt="Logo Kreativa" 
               className="h-14 w-auto object-contain drop-shadow-sm shrink-0" 
             />

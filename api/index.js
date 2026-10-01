@@ -277,6 +277,15 @@ createMasterRoutes('kategori', 'kategori_surat', ['nama', 'deskripsi']);
 createMasterRoutes('instansi', 'instansi', ['nama']);
 createMasterRoutes('kepada', 'kepada_internal', ['nama']);
 
+app.get('/api/surat/templates', (req, res) => {
+  const templateDir = path.join(__dirname, '../backend/templates');
+  if (!fs.existsSync(templateDir)) {
+    return res.json([]);
+  }
+  const files = fs.readdirSync(templateDir).filter(f => f.endsWith('.docx'));
+  res.json(files);
+});
+
 app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
   try {
     const {
