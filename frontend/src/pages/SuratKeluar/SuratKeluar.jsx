@@ -811,8 +811,8 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
       {deleteModalConfig.isOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] p-6 relative">
-            <p className="text-[15px] font-medium text-slate-800 mb-6">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] p-7 relative">
+            <p className="text-[15px] font-medium text-slate-800 mb-10">
               {deleteModalConfig.targetName}
             </p>
             <div className="flex justify-end gap-3">
