@@ -811,13 +811,13 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
       {deleteModalConfig.isOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[480px] p-8 relative">
-            <p className="text-[15px] font-medium text-slate-800 mb-16">
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[450px] p-8 min-h-[200px] flex flex-col justify-between">
+            <p className="text-[15px] font-medium text-slate-800">
               {deleteModalConfig.targetName}
             </p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-700 px-5 py-2 hover:bg-slate-50 border border-slate-300 rounded-xl transition-all">Batal</button>
-              <button onClick={deleteModalConfig.onConfirm} className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-5 py-2 rounded-xl font-medium text-sm transition-all shadow-sm">Hapus</button>
+              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-700 px-6 py-2.5 hover:bg-slate-50 border border-slate-300 rounded-xl transition-all">Batal</button>
+              <button onClick={deleteModalConfig.onConfirm} className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm">Hapus</button>
             </div>
           </div>
         </div>
