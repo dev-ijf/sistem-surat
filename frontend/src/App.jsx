@@ -45,7 +45,8 @@ const App = () => {
     'Kategori Surat': [],
     'Struktur Organisasi': [],
     'Instansi': [],
-    'Kepada (Internal)': []
+    'Kepada (Internal)': [],
+    'Kop Surat': []
   });
 
 
@@ -54,16 +55,17 @@ const App = () => {
     setIsLoading(true);
     try {
       const fetchOptions = { method: 'GET', headers: { 'Accept': 'application/json' }, mode: 'cors' };
-      const [resSurat, resJenis, resStruktur, resKategori, resInstansi, resKepada] = await Promise.all([
+      const [resSurat, resJenis, resStruktur, resKategori, resInstansi, resKepada, resKop] = await Promise.all([
         fetch(`${API_BASE}/surat`, fetchOptions),
         fetch(`${API_BASE}/setting/jenis`, fetchOptions),
         fetch(`${API_BASE}/setting/internal`, fetchOptions),
         fetch(`${API_BASE}/setting/kategori`, fetchOptions),
         fetch(`${API_BASE}/setting/instansi`, fetchOptions),
-        fetch(`${API_BASE}/setting/kepada`, fetchOptions)
+        fetch(`${API_BASE}/setting/kepada`, fetchOptions),
+        fetch(`${API_BASE}/setting/kopsurat`, fetchOptions)
       ]);
 
-      if (!resSurat.ok || !resJenis.ok || !resStruktur.ok || !resKategori.ok || !resInstansi.ok || !resKepada.ok) {
+      if (!resSurat.ok || !resJenis.ok || !resStruktur.ok || !resKategori.ok || !resInstansi.ok || !resKepada.ok || !resKop.ok) {
         throw new Error('Server merespon dengan error');
       }
 
@@ -73,6 +75,7 @@ const App = () => {
       const dataKategori = await resKategori.json();
       const dataInstansi = await resInstansi.json();
       const dataKepada = await resKepada.json();
+      const dataKop = await resKop.json();
 
       setSuratList(Array.isArray(dataSurat) ? dataSurat : []);
       setMasterData(prev => ({
@@ -81,7 +84,8 @@ const App = () => {
         'Struktur Organisasi': Array.isArray(dataStruktur) ? dataStruktur : [],
         'Kategori Surat': Array.isArray(dataKategori) ? dataKategori : prev['Kategori Surat'],
         'Instansi': Array.isArray(dataInstansi) ? dataInstansi : prev['Instansi'],
-        'Kepada (Internal)': Array.isArray(dataKepada) ? dataKepada : prev['Kepada (Internal)']
+        'Kepada (Internal)': Array.isArray(dataKepada) ? dataKepada : prev['Kepada (Internal)'],
+        'Kop Surat': Array.isArray(dataKop) ? dataKop : prev['Kop Surat']
       }));
 
       setIsConnected(true);

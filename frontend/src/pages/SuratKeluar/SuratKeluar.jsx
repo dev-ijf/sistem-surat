@@ -23,13 +23,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   const [showMasterModal, setShowMasterModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   
-  const [templateOptions, setTemplateOptions] = useState([]);
-  useEffect(() => {
-    fetch(`${API_BASE}/surat/templates`)
-      .then(res => res.json())
-      .then(data => setTemplateOptions(data))
-      .catch(err => console.error('Failed to fetch templates:', err));
-  }, [API_BASE]);
+  const templateOptions = (masterData['Kop Surat'] || []).map(k => k.nama);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -348,7 +342,8 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     { key: 'Kategori Surat', title: 'Kategori', subtitle: 'Jenis kategori surat', icon: <Tag size={16} /> },
     { key: 'Struktur Organisasi', title: 'Dari (Pengirim)', subtitle: 'Pengirim surat internal', icon: <Users size={16} /> },
     { key: 'Instansi', title: 'Instansi', subtitle: 'Unit / cabang terkait', icon: <Building size={16} /> },
-    { key: 'Kepada (Internal)', title: 'Kepada (Internal)', subtitle: 'Tujuan internal surat', icon: <ArrowRight size={16} /> }
+    { key: 'Kepada (Internal)', title: 'Kepada (Internal)', subtitle: 'Tujuan internal surat', icon: <ArrowRight size={16} /> },
+    { key: 'Kop Surat', title: 'Kop Surat', subtitle: 'Template Kop Surat', icon: <FileText size={16} /> }
   ];
 
   return (

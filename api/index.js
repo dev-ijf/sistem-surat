@@ -192,6 +192,12 @@ const initializeDatabase = async () => {
     nama VARCHAR(255) NOT NULL
   )`);
 
+  await query(`CREATE TABLE IF NOT EXISTS kopsurat (
+    id SERIAL PRIMARY KEY,
+    nama VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) DEFAULT ''
+  )`);
+
   await query(`CREATE TABLE IF NOT EXISTS surat (
     id SERIAL PRIMARY KEY,
     tujuan VARCHAR(255) DEFAULT '',
@@ -251,6 +257,18 @@ const initializeDatabase = async () => {
     { nama: 'Divisi Marketing' },
     { nama: 'Divisi Operasional' }
   ], ['nama']);
+
+  await seedIfEmpty('kopsurat', [
+    { nama: 'Kop Surat Akademi Insan Mulia.docx' },
+    { nama: 'Kop Surat Indonesia Juara.docx' },
+    { nama: 'Kop Surat Kreativa Education Network.docx' },
+    { nama: 'Kop Surat Kreativa Global School  729 jatisari.docx' },
+    { nama: 'Kop Surat Kreativa Global School 668.docx' },
+    { nama: 'Kop Surat Kreativa Global School No.39.docx' },
+    { nama: 'Kop Surat Kreativa Global School.docx' },
+    { nama: 'Kop Surat Kreativa Insan Mulia.docx' },
+    { nama: 'Kop Surat Talenta Juara.docx' }
+  ], ['nama']);
 };
 
 app.get('/', (req, res) => {
@@ -278,20 +296,15 @@ createMasterRoutes('internal', 'internal', ['nama', 'jabatan']);
 createMasterRoutes('kategori', 'kategori_surat', ['nama', 'deskripsi']);
 createMasterRoutes('instansi', 'instansi', ['nama']);
 createMasterRoutes('kepada', 'kepada_internal', ['nama']);
+createMasterRoutes('kopsurat', 'kopsurat', ['nama', 'file_path']);
 
-app.get('/api/surat/templates', (req, res) => {
-  const files = [
-    "Kop Surat Akademi Insan Mulia.docx",
-    "Kop Surat Indonesia Juara.docx",
-    "Kop Surat Kreativa Education Network.docx",
-    "Kop Surat Kreativa Global School  729 jatisari.docx",
-    "Kop Surat Kreativa Global School 668.docx",
-    "Kop Surat Kreativa Global School No.39.docx",
-    "Kop Surat Kreativa Global School.docx",
-    "Kop Surat Kreativa Insan Mulia.docx",
-    "Kop Surat Talenta Juara.docx"
-  ];
-  res.json(files);
+app.get('/api/surat/templates', async (req, res) => {
+  try {
+    const rows = await query('SELECT nama FROM kopsurat ORDER BY id');
+    res.json(rows.map(r => r.nama));
+  } catch (err) {
+    res.status(500).json({ message: 'Gagal mengambil templates.' });
+  }
 });
 
 app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
@@ -444,3 +457,9 @@ async function ensureDatabaseInitialized(req, res, next) {
 }
 
 module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server berjalan di port ${PORT}`);
+  });
+}
