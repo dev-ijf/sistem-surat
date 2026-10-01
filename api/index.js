@@ -278,11 +278,20 @@ createMasterRoutes('instansi', 'instansi', ['nama']);
 createMasterRoutes('kepada', 'kepada_internal', ['nama']);
 
 app.get('/api/surat/templates', (req, res) => {
-  const templateDir = path.join(__dirname, '../backend/templates');
-  if (!fs.existsSync(templateDir)) {
-    return res.json([]);
+  const dirsToTry = [
+    path.join(__dirname, '../backend/templates'),
+    path.join(process.cwd(), 'backend/templates'),
+    path.join(__dirname, 'templates'),
+    path.join(process.cwd(), 'api/templates')
+  ];
+  
+  let files = [];
+  for (const templateDir of dirsToTry) {
+    if (fs.existsSync(templateDir)) {
+      files = fs.readdirSync(templateDir).filter(f => f.endsWith('.docx'));
+      if (files.length > 0) break;
+    }
   }
-  const files = fs.readdirSync(templateDir).filter(f => f.endsWith('.docx'));
   res.json(files);
 });
 
