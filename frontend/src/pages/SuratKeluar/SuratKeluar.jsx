@@ -186,8 +186,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     
     setDeleteModalConfig({
       isOpen: true,
-      title: 'Konfirmasi Hapus',
-      targetName: `"${item.nama}" dari ${category}`,
+      targetName: `Hapus "${item.nama}" dari ${category}?`,
       onConfirm: async () => {
         setDeleteModalConfig(prev => ({ ...prev, isOpen: false }));
         if (!endpoint) {
@@ -253,15 +252,14 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     }
   };
 
-  const handleDeleteSurat = (id) => {
+  const handleDeleteSurat = (s) => {
     setDeleteModalConfig({
       isOpen: true,
-      title: 'Hapus Arsip Surat',
-      targetName: 'arsip surat ini',
+      targetName: `Hapus surat "${s.perihal || s.nomorsurat || 'ini'}"?`,
       onConfirm: async () => {
         setDeleteModalConfig(prev => ({ ...prev, isOpen: false }));
         try {
-          const res = await fetch(`${API_BASE}/surat/${id}`, { method: 'DELETE' });
+          const res = await fetch(`${API_BASE}/surat/${s.id}`, { method: 'DELETE' });
           if (!res.ok) return alert("Gagal menghapus: Server memberikan respon negatif.");
           await fetchData();
         } catch {
@@ -549,7 +547,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                             <button onClick={() => openEditSurat(s)} className="p-1.5 text-amber-500 bg-amber-50 hover:bg-amber-500 hover:text-white rounded-lg transition-all shadow-sm">
                               <Edit2 size={14} />
                             </button>
-                            <button onClick={() => handleDeleteSurat(s.id)} className="p-1.5 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-lg transition-all shadow-sm">
+                            <button onClick={() => handleDeleteSurat(s)} className="p-1.5 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-lg transition-all shadow-sm">
                               <Trash2 size={14} />
                             </button>
                           </div>
@@ -812,21 +810,14 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
 
       {deleteModalConfig.isOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-white/20">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
-              <h2 className="text-lg font-bold text-red-600">{deleteModalConfig.title}</h2>
-              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
-            </div>
-            <div className="p-6">
-              <p className="text-sm text-slate-600 text-center">
-                Apakah Anda yakin ingin menghapus <strong>{deleteModalConfig.targetName}</strong>?<br/>
-                <span className="text-xs text-red-500 mt-2 block">Tindakan ini tidak dapat dibatalkan.</span>
-              </p>
-            </div>
-            <div className="p-5 bg-slate-50/80 border-t border-slate-100 flex justify-center gap-3">
-              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-500 px-4 py-2 hover:bg-slate-200 rounded-xl transition-all">Batal</button>
-              <button onClick={deleteModalConfig.onConfirm} className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl font-semibold text-sm transition-all shadow-sm">Hapus</button>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] p-8 relative">
+            <p className="text-[15px] font-medium text-slate-800 mb-8">
+              {deleteModalConfig.targetName}
+            </p>
+            <div className="flex justify-end gap-3 mt-4">
+              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-700 px-5 py-2 hover:bg-slate-50 border border-slate-300 rounded-xl transition-all">Batal</button>
+              <button onClick={deleteModalConfig.onConfirm} className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-5 py-2 rounded-xl font-medium text-sm transition-all shadow-sm">Hapus</button>
             </div>
           </div>
         </div>
