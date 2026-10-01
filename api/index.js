@@ -280,20 +280,17 @@ createMasterRoutes('instansi', 'instansi', ['nama']);
 createMasterRoutes('kepada', 'kepada_internal', ['nama']);
 
 app.get('/api/surat/templates', (req, res) => {
-  const dirsToTry = [
-    path.join(__dirname, '../backend/templates'),
-    path.join(process.cwd(), 'backend/templates'),
-    path.join(__dirname, 'templates'),
-    path.join(process.cwd(), 'api/templates')
+  const files = [
+    "Kop Surat Akademi Insan Mulia.docx",
+    "Kop Surat Indonesia Juara.docx",
+    "Kop Surat Kreativa Education Network.docx",
+    "Kop Surat Kreativa Global School  729 jatisari.docx",
+    "Kop Surat Kreativa Global School 668.docx",
+    "Kop Surat Kreativa Global School No.39.docx",
+    "Kop Surat Kreativa Global School.docx",
+    "Kop Surat Kreativa Insan Mulia.docx",
+    "Kop Surat Talenta Juara.docx"
   ];
-
-  let files = [];
-  for (const templateDir of dirsToTry) {
-    if (fs.existsSync(templateDir)) {
-      files = fs.readdirSync(templateDir).filter(f => f.endsWith('.docx'));
-      if (files.length > 0) break;
-    }
-  }
   res.json(files);
 });
 
