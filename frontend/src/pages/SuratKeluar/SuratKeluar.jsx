@@ -664,7 +664,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                     + Tambah
                   </button>
                 </div>
-                <div className="mt-5 space-y-2">
+                <div className={`mt-5 space-y-2 ${card.key === 'Kop Surat' ? 'max-h-[300px] overflow-y-auto custom-scrollbar pr-2' : ''}`}>
                   {(masterData[card.key] || []).map((item, index) => (
                     <div key={item.id || index} className="rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-2.5 text-sm">
                       <div className="flex items-center justify-between gap-3">
