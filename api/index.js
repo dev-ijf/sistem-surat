@@ -682,7 +682,71 @@ async function ensureDatabaseInitialized(req, res, next) {
 }
 
 app.get('/api/test-deploy', (req, res) => res.json({ deployed: true, time: Date.now() }));
-$newEndpoints
+app.get('/api/users', async (req, res) => {
+  try {
+    const rows = await query('SELECT id, nama, email, role, status, created_at FROM users ORDER BY id ASC');
+    res.json(rows);
+  } catch (err) {
+    console.error('GET /api/users error', err);
+    res.status(500).json({ message: 'Gagal mengambil data user.' });
+  }
+});
+
+app.post('/api/users', async (req, res) => {
+  try {
+    const { nama, email, role = 'Staff', status = 'Aktif' } = req.body;
+    const inserted = await pool.query(
+      'INSERT INTO users (nama, email, role, status) VALUES ($1, $2, $3, $4) RETURNING id, nama, email, role, status, created_at',
+      [nama, email, role, status]
+    );
+    res.status(201).json(inserted.rows[0]);
+  } catch (err) {
+    console.error('POST /api/users error', err);
+    if (err.code === '23505') {
+      return res.status(400).json({ message: 'Email sudah terdaftar.' });
+    }
+    res.status(500).json({ message: 'Gagal menyimpan user.' });
+  }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { nama, email, role, status } = req.body;
+
+    const rows = await query('SELECT * FROM users WHERE id = $1', [id]);
+    if (!rows[0]) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    const updated = await pool.query(
+      'UPDATE users SET nama = $1, email = $2, role = $3, status = $4 WHERE id = $5 RETURNING id, nama, email, role, status, created_at',
+      [nama, email, role, status, id]
+    );
+    res.json(updated.rows[0]);
+  } catch (err) {
+    console.error('PUT /api/users/:id error', err);
+    if (err.code === '23505') {
+      return res.status(400).json({ message: 'Email sudah terdaftar pada user lain.' });
+    }
+    res.status(500).json({ message: 'Gagal memperbarui user.' });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const rows = await query('SELECT * FROM users WHERE id = $1', [id]);
+    if (!rows[0]) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.json({ message: 'User berhasil dihapus', data: rows[0] });
+  } catch (err) {
+    console.error('DELETE /api/users/:id error', err);
+    res.status(500).json({ message: 'Gagal menghapus user.' });
+  }
+});
 module.exports = app;
 
 if (require.main === module) {
@@ -690,6 +754,7 @@ if (require.main === module) {
     console.log(`Server berjalan di port ${PORT}`);
   });
 }
+
 
 
 
