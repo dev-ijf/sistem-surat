@@ -164,6 +164,14 @@ const initializeDatabase = async () => {
 
   pool = new Pool(poolConfig);
 
+  await query(`CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    nama VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'admin',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`);
+
   await query(`CREATE TABLE IF NOT EXISTS jenis_surat (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(255) NOT NULL,
