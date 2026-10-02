@@ -202,8 +202,14 @@ const initializeDatabase = async () => {
   await query(`CREATE TABLE IF NOT EXISTS kopsurat (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(255) NOT NULL,
-    file_path VARCHAR(255) DEFAULT ''
+    file_path VARCHAR(255) DEFAULT '',
+    instansi VARCHAR(255) DEFAULT ''
   )`);
+  try {
+    await query('ALTER TABLE kopsurat ADD COLUMN IF NOT EXISTS instansi VARCHAR(255) DEFAULT \'\'');
+  } catch(e) {
+    console.error("Error adding instansi column to kopsurat", e);
+  }
 
   await query(`CREATE TABLE IF NOT EXISTS surat (
     id SERIAL PRIMARY KEY,
@@ -383,7 +389,7 @@ app.get('/api/setting/kopsurat', async (req, res) => {
 
 app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res) => {
   try {
-    let { nama } = req.body;
+    let { nama, instansi } = req.body;
     if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
     
     let filePath = '';
@@ -396,8 +402,8 @@ app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res
     }
     
     const inserted = await pool.query(
-      'INSERT INTO kopsurat (nama, file_path, file_data, file_mime) VALUES ($1, $2, $3, $4) RETURNING id, nama, file_path',
-      [nama, filePath, fileData, fileMime]
+      'INSERT INTO kopsurat (nama, file_path, file_data, file_mime, instansi) VALUES ($1, $2, $3, $4, $5) RETURNING id, nama, file_path, instansi',
+      [nama, filePath, fileData, fileMime, instansi || '']
     );
     res.json(inserted.rows ? inserted.rows[0] : inserted[0]);
   } catch (err) {
@@ -409,7 +415,7 @@ app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res
 app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, res) => {
   try {
     const id = Number(req.params.id);
-    let { nama } = req.body;
+    let { nama, instansi } = req.body;
     if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
     
     const existing = await query('SELECT id, nama, file_path FROM kopsurat WHERE id = $1', [id]);
@@ -420,14 +426,14 @@ app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, 
     if (req.file) {
       filePath = nama;
       updated = await pool.query(
-        'UPDATE kopsurat SET nama = $1, file_path = $2, file_data = $3, file_mime = $4 WHERE id = $5 RETURNING id, nama, file_path',
-        [nama, filePath, req.file.buffer, req.file.mimetype, id]
+        'UPDATE kopsurat SET nama = $1, file_path = $2, file_data = $3, file_mime = $4, instansi = $5 WHERE id = $6 RETURNING id, nama, file_path, instansi',
+        [nama, filePath, req.file.buffer, req.file.mimetype, instansi || '', id]
       );
     } else {
       filePath = nama;
       updated = await pool.query(
-        'UPDATE kopsurat SET nama = $1, file_path = $2 WHERE id = $3 RETURNING id, nama, file_path',
-        [nama, filePath, id]
+        'UPDATE kopsurat SET nama = $1, file_path = $2, instansi = $3 WHERE id = $4 RETURNING id, nama, file_path, instansi',
+        [nama, filePath, instansi || '', id]
       );
     }
     res.json(updated.rows ? updated.rows[0] : updated[0]);
