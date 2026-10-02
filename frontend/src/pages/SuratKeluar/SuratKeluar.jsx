@@ -848,7 +848,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
             </p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-700 px-6 py-2.5 hover:bg-slate-50 border border-slate-300 rounded-xl transition-all">Batal</button>
-              <button onClick={deleteModalConfig.onConfirm} className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm">Hapus</button>
+              <button onClick={deleteModalConfig.onConfirm} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm">Hapus</button>
             </div>
           </div>
         </div>
