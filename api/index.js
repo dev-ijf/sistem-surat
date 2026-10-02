@@ -4,6 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 const { Pool, Client } = require('pg');
 const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
@@ -279,6 +280,69 @@ app.get(['/api', '/api/health'], (req, res) => {
 });
 
 app.use('/api', ensureDatabaseInitialized);
+
+const verifyGoogleToken = (accessToken) => {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'www.googleapis.com',
+            path: '/oauth2/v3/userinfo',
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'User-Agent': 'SistemSurat-App'
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    try { resolve(JSON.parse(data)); } catch (error) { reject(new Error('Gagal membaca data dari Google')); }
+                } else {
+                    reject(new Error('Token Google tidak valid atau sudah kedaluwarsa'));
+                }
+            });
+        });
+        req.on('error', (error) => { reject(new Error('Masalah koneksi ke server Google')); });
+        req.end();
+    });
+};
+
+app.post('/api/auth/google', async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) {
+            return res.status(400).json({ message: 'Token tidak dikirim oleh frontend!' });
+        }
+
+        const payload = await verifyGoogleToken(token);
+        const userEmail = payload.email;
+
+        if (!userEmail) {
+            return res.status(401).json({ message: 'Akses ditolak: Tidak dapat menemukan email di token ini.' });
+        }
+
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [userEmail]);
+        const user = result.rows[0];
+
+        if (!user) {
+            return res.status(401).json({ message: 'Akses ditolak: Email belum terdaftar di dalam sistem.' });
+        }
+
+        res.status(200).json({
+            message: 'Login berhasil!',
+            user: {
+                email: user.email,
+                name: user.nama,
+                role: user.role,
+                picture: payload.picture,
+            },
+        });
+    } catch (error) {
+        res.status(401).json({ message: error.message });
+    }
+});
 
 app.get('/api/surat', async (req, res) => {
   try {

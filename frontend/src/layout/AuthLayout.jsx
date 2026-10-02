@@ -26,10 +26,28 @@ export default function AuthLayout() {
 
 
 
+    const getApiBase = () => {
+        const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+        const isBrowser = typeof window !== "undefined";
+        const isLocalPage = isBrowser && ["localhost", "127.0.0.1"].includes(window.location.hostname);
+        const pointsToLocalhost = configuredUrl && /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredUrl);
+      
+        if (configuredUrl && (!pointsToLocalhost || isLocalPage)) {
+          const normalizedUrl = configuredUrl.startsWith("/") || /^https?:\/\//i.test(configuredUrl)
+            ? configuredUrl
+            : `https://${configuredUrl}`;
+      
+          return normalizedUrl.replace(/\/$/, "");
+        }
+        return "/api";
+    };
+    
+    const API_BASE = getApiBase();
+
     const sendTokenToBackend = async (accessToken) => {
         try {
             console.log("Mengirim token ke backend...");
-            const response = await fetch('http://localhost:5000/api/auth/google', {
+            const response = await fetch(`${API_BASE}/auth/google`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
