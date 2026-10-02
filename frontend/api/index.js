@@ -227,6 +227,10 @@ const initializeDatabase = async () => {
     }
   };
 
+  await seedIfEmpty('users', [
+    { email: 'kukies.chocolate@gmail.com', nama: 'Admin', role: 'admin' }
+  ], ['email', 'nama', 'role']);
+
   await seedIfEmpty('jenis_surat', [
     { nama: 'Surat Keputusan', deskripsi: 'Surat resmi keputusan' },
     { nama: 'Surat Permohonan', deskripsi: 'Surat permintaan resmi' }
