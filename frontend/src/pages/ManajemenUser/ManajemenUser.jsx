@@ -249,22 +249,22 @@ const ManajemenUser = ({ globalSearch }) => {
                       {user.lastLogin}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex justify-end gap-2">
                         <button
                           onClick={() => {
                             setEditingUser(user);
                             setShowEditModal(true);
                           }}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                          <Edit2 size={16} />
+                          className="p-1.5 text-amber-500 bg-amber-50 hover:bg-amber-500 hover:text-white rounded-lg transition-all shadow-sm" title="Edit">
+                          <Edit2 size={14} />
                         </button>
                         <button
                           onClick={() => {
                             setDeletingUser(user);
                             setShowDeleteModal(true);
                           }}
-                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                          <Trash2 size={16} />
+                          className="p-1.5 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-lg transition-all shadow-sm" title="Hapus">
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -534,32 +534,15 @@ const ManajemenUser = ({ globalSearch }) => {
       )}
 
       {showDeleteModal && deletingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold !text-slate-900 tracking-tight">Hapus User</h2>
-                <p className="text-sm text-slate-500">Konfirmasi penghapusan data</p>
-              </div>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[450px] p-8 min-h-[200px] flex flex-col justify-between">
+            <p className="text-[15px] font-medium text-slate-800">
+              Apakah Anda yakin ingin menghapus pengguna <span className="font-bold">{deletingUser.nama}</span>?
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => { setShowDeleteModal(false); setDeletingUser(null); }}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Apakah Anda yakin ingin menghapus pengguna <span className="font-semibold text-slate-800">{deletingUser.nama}</span>?
-                Tindakan ini tidak dapat dibatalkan.
-              </p>
-            </div>
-
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
-              <button
-                onClick={() => { setShowDeleteModal(false); setDeletingUser(null); }}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                className="text-sm font-medium text-slate-700 px-6 py-2.5 hover:bg-slate-50 border border-slate-300 rounded-xl transition-all"
               >
                 Batal
               </button>
@@ -583,9 +566,9 @@ const ManajemenUser = ({ globalSearch }) => {
                     alert('Terjadi kesalahan pada server');
                   }
                 }}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors"
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-sm transition-all text-sm"
               >
-                Ya, Hapus
+                Delete
               </button>
             </div>
           </div>
