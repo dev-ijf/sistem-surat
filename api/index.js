@@ -172,6 +172,12 @@ const initializeDatabase = async () => {
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
 
+  try {
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT \'Aktif\'');
+  } catch(e) {
+    console.error("Error adding status column to users", e);
+  }
+
   await query(`CREATE TABLE IF NOT EXISTS jenis_surat (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(255) NOT NULL,
@@ -236,8 +242,8 @@ const initializeDatabase = async () => {
   };
 
   await seedIfEmpty('users', [
-    { email: 'kukies.chocolate@gmail.com', nama: 'Admin', role: 'admin' }
-  ], ['email', 'nama', 'role']);
+    { email: 'kukies.chocolate@gmail.com', nama: 'Admin', role: 'Admin', status: 'Aktif' }
+  ], ['email', 'nama', 'role', 'status']);
 
   await seedIfEmpty('jenis_surat', [
     { nama: 'Surat Keputusan', deskripsi: 'Surat resmi keputusan' },
@@ -676,6 +682,7 @@ async function ensureDatabaseInitialized(req, res, next) {
 }
 
 app.get('/api/test-deploy', (req, res) => res.json({ deployed: true, time: Date.now() }));
+$newEndpoints
 module.exports = app;
 
 if (require.main === module) {
@@ -683,3 +690,6 @@ if (require.main === module) {
     console.log(`Server berjalan di port ${PORT}`);
   });
 }
+
+
+

@@ -50,10 +50,28 @@ const ManajemenUser = ({ globalSearch }) => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const getApiBase = () => {
+      const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+      const isBrowser = typeof window !== "undefined";
+      const isLocalPage = isBrowser && ["localhost", "127.0.0.1"].includes(window.location.hostname);
+      const pointsToLocalhost = configuredUrl && /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredUrl);
+    
+      if (configuredUrl && (!pointsToLocalhost || isLocalPage)) {
+        const normalizedUrl = configuredUrl.startsWith("/") || /^https?:\/\//i.test(configuredUrl)
+          ? configuredUrl
+          : `https://${configuredUrl}`;
+    
+        return normalizedUrl.replace(/\/$/, "");
+      }
+      return "/api";
+  };
+  const API_BASE = getApiBase();
+
+
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/users');
+      const res = await fetch(`${API_BASE}/users`);
       if (res.ok) {
         const data = await res.json();
         const mappedData = data.map(u => ({
@@ -380,7 +398,7 @@ const ManajemenUser = ({ globalSearch }) => {
               <button
                 onClick={async () => {
                   try {
-                    const res = await fetch('http://localhost:5000/api/users', {
+                    const res = await fetch(`${API_BASE}/users`, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json'
@@ -485,7 +503,7 @@ const ManajemenUser = ({ globalSearch }) => {
               <button
                 onClick={async () => {
                   try {
-                    const res = await fetch(`http://localhost:5000/api/users/${editingUser.id}`, {
+                    const res = await fetch(`${API_BASE}/users/${editingUser.id}`, {
                       method: 'PUT',
                       headers: {
                         'Content-Type': 'application/json'
@@ -548,7 +566,7 @@ const ManajemenUser = ({ globalSearch }) => {
               <button
                 onClick={async () => {
                   try {
-                    const res = await fetch(`http://localhost:5000/api/users/${deletingUser.id}`, {
+                    const res = await fetch(`${API_BASE}/users/${deletingUser.id}`, {
                       method: 'DELETE'
                     });
 
