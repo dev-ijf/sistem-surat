@@ -663,6 +663,7 @@ async function ensureDatabaseInitialized(req, res, next) {
   }
 }
 
+app.all('*', (req, res) => res.status(404).json({ error: 'CATCH ALL', url: req.url, originalUrl: req.originalUrl, method: req.method }));
 module.exports = app;
 
 if (require.main === module) {
