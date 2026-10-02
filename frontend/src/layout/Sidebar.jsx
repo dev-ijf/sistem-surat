@@ -54,7 +54,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, onLogout, userRole }) => {
             <span>Surat Keluar</span>
           </div>
           
-          {(userRole === 'Admin' || userRole === 'Super Admin') && (
+          {(userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'super admin') && (
             <>
               <div className="px-5 mb-2 mt-5">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
