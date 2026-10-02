@@ -65,7 +65,7 @@ export default function AuthLayout() {
                 window.location.href = '/'; 
             } else {
                 console.error("Backend menolak login:", data.message);
-                setLoginError("Something went wrong while signing in. Please try again.");
+                setLoginError(data.message || "Something went wrong while signing in. Please try again.");
             }
         } catch (error) {
             console.error("Error jaringan saat menghubungi backend:", error);
