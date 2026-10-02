@@ -4,11 +4,13 @@ import { useGoogleLogin } from '@react-oauth/google';
 
 export default function AuthLayout() {
     const [selectedRole, setSelectedRole] = useState(null);
+    const [loginError, setLoginError] = useState(null);
 
     useEffect(() => {
         const handlePopState = () => {
             if (window.location.hash !== '#login') {
                 setSelectedRole(null);
+                setLoginError(null);
             }
         };
 
@@ -19,6 +21,7 @@ export default function AuthLayout() {
     const handleRoleSelect = (role) => {
         window.location.hash = 'login';
         setSelectedRole(role);
+        setLoginError(null);
     };
 
 
@@ -44,20 +47,24 @@ export default function AuthLayout() {
                 window.location.href = '/'; 
             } else {
                 console.error("Backend menolak login:", data.message);
-                alert(`Gagal: ${data.message}`);
+                setLoginError("Something went wrong while signing in. Please try again.");
             }
         } catch (error) {
             console.error("Error jaringan saat menghubungi backend:", error);
-            alert("Terjadi kesalahan jaringan.");
+            setLoginError("Something went wrong while signing in. Please try again.");
         }
     };
 
     const login = useGoogleLogin({
         onSuccess: tokenResponse => {
             console.log("Sukses dapat Token dari Google:", tokenResponse);
+            setLoginError(null);
             sendTokenToBackend(tokenResponse.access_token);
         },
-        onError: () => console.log('Login Google Dibatalkan/Gagal'),
+        onError: () => {
+            console.log('Login Google Dibatalkan/Gagal');
+            setLoginError("Something went wrong while signing in. Please try again.");
+        },
     });
 
     return (
@@ -148,6 +155,12 @@ export default function AuthLayout() {
                                         </h2>
                                     </div>
 
+                                    {loginError && (
+                                        <div className="mb-4 py-3 px-4 bg-red-50 border border-red-200 rounded-xl text-center flex items-center justify-center">
+                                            <p className="text-[11px] text-red-500 font-medium leading-relaxed">{loginError}</p>
+                                        </div>
+                                    )}
+
                                     <button onClick={() => login()} className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-[#E2E8F0] rounded-full hover:bg-[#F8FAFC] transition-colors disabled:opacity-70 disabled:cursor-not-allowed bg-white shadow-xs mb-4">
                                         <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -189,6 +202,12 @@ export default function AuthLayout() {
                                             <span className="text-[#0F172A] font-bold"> Portal</span>
                                         </h2>
                                     </div>
+
+                                    {loginError && (
+                                        <div className="mb-4 py-3 px-4 bg-red-50 border border-red-200 rounded-xl text-center flex items-center justify-center">
+                                            <p className="text-[11px] text-red-500 font-medium leading-relaxed">{loginError}</p>
+                                        </div>
+                                    )}
 
                                     <button onClick={() => login()} className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-[#E2E8F0] rounded-full hover:bg-[#F8FAFC] transition-colors disabled:opacity-70 disabled:cursor-not-allowed bg-white shadow-xs mb-4">
                                         <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
