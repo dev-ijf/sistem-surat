@@ -27,6 +27,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   const templateOptions = (masterData['Kop Surat'] || []).map(k => k.nama);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingMaster, setIsSavingMaster] = useState(false);
 
   useEffect(() => {
     const menu = 'surat-keluar';
@@ -142,11 +143,12 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   const handleSaveMaster = async () => {
     if (!masterForm.nama.trim()) return alert("Nama referensi wajib diisi.");
 
-    const category = activeMasterCard || activeMasterTab;
-    const endpoint = getMasterEndpoint(category);
+    setIsSavingMaster(true);
+    try {
+      const category = activeMasterCard || activeMasterTab;
+      const endpoint = getMasterEndpoint(category);
 
-    if (category === 'Kop Surat') {
-      try {
+      if (category === 'Kop Surat') {
         const method = editingMaster ? 'PUT' : 'POST';
         const url = editingMaster ? `${API_BASE}/setting/${endpoint}/${editingMaster.id}` : `${API_BASE}/setting/${endpoint}`;
         const formData = new FormData();
@@ -161,34 +163,30 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
         setShowMasterModal(false);
         setEditingMaster(null);
         setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null, instansi: '' });
-      } catch (err) {
-        alert(`Koneksi gagal: Gagal menyimpan data template.`);
+        return;
       }
-      return;
-    }
 
-    const payload = {
-      nama: masterForm.nama,
-      deskripsi: masterForm.deskripsi || '',
-      jabatan: masterForm.jabatan || ''
-    };
+      const payload = {
+        nama: masterForm.nama,
+        deskripsi: masterForm.deskripsi || '',
+        jabatan: masterForm.jabatan || ''
+      };
 
-    if (!endpoint) {
-      if (editingMaster) {
-        setMasterData(prev => ({
-          ...prev,
-          [category]: prev[category].map(item => item.id === editingMaster.id ? { ...item, ...payload } : item)
-        }));
-      } else {
-        setMasterData(prev => ({ ...prev, [category]: [...prev[category], { id: Date.now(), ...payload }] }));
+      if (!endpoint) {
+        if (editingMaster) {
+          setMasterData(prev => ({
+            ...prev,
+            [category]: prev[category].map(item => item.id === editingMaster.id ? { ...item, ...payload } : item)
+          }));
+        } else {
+          setMasterData(prev => ({ ...prev, [category]: [...prev[category], { id: Date.now(), ...payload }] }));
+        }
+        setShowMasterModal(false);
+        setEditingMaster(null);
+        setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null, instansi: '' });
+        return;
       }
-      setShowMasterModal(false);
-      setEditingMaster(null);
-      setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null, instansi: '' });
-      return;
-    }
 
-    try {
       const method = editingMaster ? 'PUT' : 'POST';
       const url = editingMaster ? `${API_BASE}/setting/${endpoint}/${editingMaster.id}` : `${API_BASE}/setting/${endpoint}`;
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -197,8 +195,10 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       setShowMasterModal(false);
       setEditingMaster(null);
       setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null, instansi: '' });
-    } catch {
-      alert(`Koneksi gagal: Pastikan endpoint backend ${API_BASE} sudah tersedia.`);
+    } catch (err) {
+      alert(`Koneksi gagal: Gagal menyimpan data template/master.`);
+    } finally {
+      setIsSavingMaster(false);
     }
   };
 
@@ -731,7 +731,10 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
             </div>
             <div className="p-5 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-3">
               <button onClick={() => setShowMasterModal(false)} className="text-sm font-medium text-slate-400">Cancel</button>
-              <button onClick={handleSaveMaster} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-semibold text-sm">Simpan</button>
+              <button onClick={handleSaveMaster} disabled={isSavingMaster} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 disabled:opacity-50 transition-all">
+                {isSavingMaster ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                Simpan
+              </button>
             </div>
           </div>
         </div>

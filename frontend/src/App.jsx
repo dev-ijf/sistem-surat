@@ -54,7 +54,7 @@ const App = () => {
   const fetchData = useCallback(async function doFetch(retryCount = 0) {
     setIsLoading(true);
     try {
-      const fetchOptions = { method: 'GET', headers: { 'Accept': 'application/json' }, mode: 'cors' };
+      const fetchOptions = { method: 'GET', headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }, mode: 'cors', cache: 'no-store' };
       const [resSurat, resJenis, resStruktur, resKategori, resInstansi, resKepada, resKop] = await Promise.all([
         fetch(`${API_BASE}/surat`, fetchOptions),
         fetch(`${API_BASE}/setting/jenis`, fetchOptions),

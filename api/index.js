@@ -21,6 +21,12 @@ let pool;
 
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Expires', '-1');
+  res.set('Pragma', 'no-cache');
+  next();
+});
 const uploadDir = process.env.VERCEL
   ? path.join('/tmp', 'uploads')
   : path.join(__dirname, 'uploads');
