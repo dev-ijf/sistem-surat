@@ -559,9 +559,9 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                         </td>
                         <td className="px-4 py-3 text-center">
                           {s.fileSuratPath ? (
-                            <a href={`${API_BASE}/surat/preview/${s.fileSuratPath.split('/').pop().replace('.docx', '.pdf')}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
+                            <a href={`${API_BASE.startsWith('/') ? window.location.origin + API_BASE : API_BASE}/surat/download/${s.id}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
                           ) : s.fileSuratName ? (
-                            <a href={`https://docs.google.com/viewer?url=${encodeURIComponent((API_BASE.startsWith('/') ? window.location.origin + API_BASE : API_BASE) + `/surat/preview-template/${s.id}/file.docx`)}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
+                            <a href={`${API_BASE.startsWith('/') ? window.location.origin + API_BASE : API_BASE}/surat/preview-template/${s.id}/${encodeURIComponent(s.fileSuratName)}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
                           ) : (
                             <span className="text-[13px] text-slate-400 italic">Belum ada</span>
                           )}
