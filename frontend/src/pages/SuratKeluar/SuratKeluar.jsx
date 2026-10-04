@@ -559,9 +559,13 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                         </td>
                         <td className="px-4 py-3 text-center">
                           {s.fileSuratPath ? (
-                            <a href={`${API_BASE.startsWith('/') ? window.location.origin + API_BASE : API_BASE}/surat/download/${s.id}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
+                            <a href={`${API_BASE.startsWith('/') ? window.location.origin + API_BASE : API_BASE}/surat/download/${s.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-semibold transition-all shadow-sm">
+                              <Download size={14} /> Unduh
+                            </a>
                           ) : s.fileSuratName ? (
-                            <a href={`${API_BASE.startsWith('/') ? window.location.origin + API_BASE : API_BASE}/surat/preview-template/${s.id}/${encodeURIComponent(s.fileSuratName)}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-all">Lihat</a>
+                            <a href={`${API_BASE.startsWith('/') ? window.location.origin + API_BASE : API_BASE}/surat/preview-template/${s.id}/${encodeURIComponent(s.fileSuratName)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-semibold transition-all shadow-sm">
+                              <Download size={14} /> Unduh
+                            </a>
                           ) : (
                             <span className="text-[13px] text-slate-400 italic">Belum ada</span>
                           )}
