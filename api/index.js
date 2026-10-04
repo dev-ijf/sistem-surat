@@ -20,7 +20,8 @@ const DB_NAME = process.env.DB_NAME || 'sistem_surat';
 let pool;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.set('Expires', '-1');
@@ -395,21 +396,27 @@ app.get('/api/setting/kopsurat', async (req, res) => {
 
 app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res) => {
   try {
-    let { nama, instansi } = req.body;
+    let { nama, instansi, fileTemplate, fileMime } = req.body;
     if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
     
     let filePath = '';
     let fileData = null;
-    let fileMime = null;
-    if (req.file) {
+    let mime = fileMime || null;
+    
+    // Support multipart fallback but prioritize base64 json
+    if (fileTemplate && fileTemplate.startsWith('data:')) {
+      const base64Data = fileTemplate.split(',')[1];
+      fileData = Buffer.from(base64Data, 'base64');
+      filePath = nama;
+    } else if (req.file) {
       filePath = nama;
       fileData = req.file.buffer;
-      fileMime = req.file.mimetype;
+      mime = req.file.mimetype;
     }
     
     const inserted = await pool.query(
       'INSERT INTO kopsurat (nama, file_path, file_data, file_mime, instansi) VALUES ($1, $2, $3, $4, $5) RETURNING id, nama, file_path, instansi',
-      [nama, filePath, fileData, fileMime, instansi || '']
+      [nama, filePath, fileData, mime, instansi || '']
     );
     res.json(inserted.rows ? inserted.rows[0] : inserted[0]);
   } catch (err) {
@@ -421,7 +428,7 @@ app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res
 app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, res) => {
   try {
     const id = Number(req.params.id);
-    let { nama, instansi } = req.body;
+    let { nama, instansi, fileTemplate, fileMime } = req.body;
     if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
     
     const existing = await query('SELECT id, nama, file_path FROM kopsurat WHERE id = $1', [id]);
@@ -429,11 +436,24 @@ app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, 
     let filePath = ext?.file_path || '';
     
     let updated;
-    if (req.file) {
+    let newFileData = null;
+    let newMime = null;
+    
+    if (fileTemplate && fileTemplate.startsWith('data:')) {
+      const base64Data = fileTemplate.split(',')[1];
+      newFileData = Buffer.from(base64Data, 'base64');
+      newMime = fileMime;
       filePath = nama;
+    } else if (req.file) {
+      newFileData = req.file.buffer;
+      newMime = req.file.mimetype;
+      filePath = nama;
+    }
+    
+    if (newFileData) {
       updated = await pool.query(
         'UPDATE kopsurat SET nama = $1, file_path = $2, file_data = $3, file_mime = $4, instansi = $5 WHERE id = $6 RETURNING id, nama, file_path, instansi',
-        [nama, filePath, req.file.buffer, req.file.mimetype, instansi || '', id]
+        [nama, filePath, newFileData, newMime, instansi || '', id]
       );
     } else {
       filePath = nama;
@@ -473,17 +493,21 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
   try {
     const {
       tujuan, jenisSurat, tglSurat, dari, perihal, kategori, nomorSurat,
-      status, instansi, penyimpananFisik, templateKop
+      status, instansi, penyimpananFisik, templateKop,
+      fileSurat, fileMime, fileName
     } = req.body;
     
-    let fileSuratName = req.file ? req.file.originalname : (templateKop ? templateKop : '');
+    let fileSuratName = (fileName) ? fileName : (req.file ? req.file.originalname : (templateKop ? templateKop : ''));
     let fileSuratPath = '';
     let fileData = null;
-    let fileMime = null;
+    let mime = fileMime || null;
     
-    if (req.file) {
+    if (fileSurat && fileSurat.startsWith('data:')) {
+      const base64Data = fileSurat.split(',')[1];
+      fileData = Buffer.from(base64Data, 'base64');
+    } else if (req.file) {
       fileData = req.file.buffer;
-      fileMime = req.file.mimetype;
+      mime = req.file.mimetype;
     } else if (templateKop) {
       const kopsuratRows = await pool.query('SELECT file_data FROM kopsurat WHERE nama = $1', [templateKop]);
       const kop = kopsuratRows.rows ? kopsuratRows.rows[0] : kopsuratRows[0];
@@ -493,6 +517,7 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
         doc.render({ tujuan, jenisSurat, tglSurat, dari, perihal, kategori, nomorSurat, instansi, judul: req.body.judul });
         fileData = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
         fileMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        mime = fileMime;
         const cleanName = String(perihal || req.body.judul || 'Surat').replace(/[^a-zA-Z0-9 -]/g, '').trim();
         fileSuratName = cleanName + '.docx';
       }
@@ -500,7 +525,7 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
 
     const inserted = await pool.query(
       'INSERT INTO surat (tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, file_data, file_mime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *',
-      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, fileData, fileMime]
+      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, fileData, mime]
     );
     
     const newId = inserted.rows[0].id;
@@ -539,16 +564,29 @@ app.put('/api/surat/:id', upload.single('fileSurat'), async (req, res) => {
       nomorSurat = surat.nomorSurat,
       status = surat.status,
       instansi = surat.instansi,
-      penyimpananFisik = surat.penyimpananFisik
+      penyimpananFisik = surat.penyimpananFisik,
+      fileSurat, fileMime, fileName, templateKop
     } = req.body;
 
-    const fileSuratName = req.file ? req.file.originalname : (req.body.templateKop ? req.body.templateKop : surat.fileSuratName);
+    const fileSuratName = (fileName) ? fileName : (req.file ? req.file.originalname : (templateKop ? templateKop : surat.fileSuratName));
     
-    if (req.file) {
+    let newFileData = null;
+    let newMime = null;
+    
+    if (fileSurat && fileSurat.startsWith('data:')) {
+      const base64Data = fileSurat.split(',')[1];
+      newFileData = Buffer.from(base64Data, 'base64');
+      newMime = fileMime;
+    } else if (req.file) {
+      newFileData = req.file.buffer;
+      newMime = req.file.mimetype;
+    }
+    
+    if (newFileData) {
       const finalPath = `/api/surat/download/${id}`;
       const updated = await pool.query(
         'UPDATE surat SET tujuan = $1, jenisSurat = $2, tglSurat = $3, dari = $4, instansi = $5, perihal = $6, kategori = $7, nomorSurat = $8, status = $9, penyimpananFisik = $10, fileSuratName = $11, fileSuratPath = $12, file_data = $13, file_mime = $14 WHERE id = $15 RETURNING *',
-        [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, finalPath, req.file.buffer, req.file.mimetype, id]
+        [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, finalPath, newFileData, newMime, id]
       );
       return res.json(mapSuratRow(updated.rows ? updated.rows[0] : updated[0]));
     } else {
