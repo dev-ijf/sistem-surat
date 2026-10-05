@@ -20,8 +20,7 @@ const DB_NAME = process.env.DB_NAME || 'sistem_surat';
 let pool;
 
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json());
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.set('Expires', '-1');
@@ -49,7 +48,7 @@ const query = async (sql, params = []) => {
 
 const mapSuratRow = (row) => {
   if (!row) return row;
-  const mapped = {
+  return {
     ...row,
     jenisSurat: row.jenisSurat ?? row.jenissurat,
     tglSurat: row.tglSurat ?? row.tglsurat,
@@ -58,8 +57,6 @@ const mapSuratRow = (row) => {
     fileSuratName: row.fileSuratName ?? row.filesuratname,
     fileSuratPath: row.fileSuratPath ?? row.filesuratpath
   };
-  delete mapped.file_data;
-  return mapped;
 };
 
 const createMasterRoutes = (endpoint, table, fields) => {
@@ -398,27 +395,21 @@ app.get('/api/setting/kopsurat', async (req, res) => {
 
 app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res) => {
   try {
-    let { nama, instansi, fileTemplate, fileMime } = req.body;
+    let { nama, instansi } = req.body;
     if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
     
     let filePath = '';
     let fileData = null;
-    let mime = fileMime || null;
-    
-    // Support multipart fallback but prioritize base64 json
-    if (fileTemplate && fileTemplate.startsWith('data:')) {
-      const base64Data = fileTemplate.split(',')[1];
-      fileData = Buffer.from(base64Data, 'base64');
-      filePath = nama;
-    } else if (req.file) {
+    let fileMime = null;
+    if (req.file) {
       filePath = nama;
       fileData = req.file.buffer;
-      mime = req.file.mimetype;
+      fileMime = req.file.mimetype;
     }
     
     const inserted = await pool.query(
       'INSERT INTO kopsurat (nama, file_path, file_data, file_mime, instansi) VALUES ($1, $2, $3, $4, $5) RETURNING id, nama, file_path, instansi',
-      [nama, filePath, fileData, mime, instansi || '']
+      [nama, filePath, fileData, fileMime, instansi || '']
     );
     res.json(inserted.rows ? inserted.rows[0] : inserted[0]);
   } catch (err) {
@@ -430,7 +421,7 @@ app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res
 app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, res) => {
   try {
     const id = Number(req.params.id);
-    let { nama, instansi, fileTemplate, fileMime } = req.body;
+    let { nama, instansi } = req.body;
     if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
     
     const existing = await query('SELECT id, nama, file_path FROM kopsurat WHERE id = $1', [id]);
@@ -438,24 +429,11 @@ app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, 
     let filePath = ext?.file_path || '';
     
     let updated;
-    let newFileData = null;
-    let newMime = null;
-    
-    if (fileTemplate && fileTemplate.startsWith('data:')) {
-      const base64Data = fileTemplate.split(',')[1];
-      newFileData = Buffer.from(base64Data, 'base64');
-      newMime = fileMime;
+    if (req.file) {
       filePath = nama;
-    } else if (req.file) {
-      newFileData = req.file.buffer;
-      newMime = req.file.mimetype;
-      filePath = nama;
-    }
-    
-    if (newFileData) {
       updated = await pool.query(
         'UPDATE kopsurat SET nama = $1, file_path = $2, file_data = $3, file_mime = $4, instansi = $5 WHERE id = $6 RETURNING id, nama, file_path, instansi',
-        [nama, filePath, newFileData, newMime, instansi || '', id]
+        [nama, filePath, req.file.buffer, req.file.mimetype, instansi || '', id]
       );
     } else {
       filePath = nama;
@@ -495,21 +473,17 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
   try {
     const {
       tujuan, jenisSurat, tglSurat, dari, perihal, kategori, nomorSurat,
-      status, instansi, penyimpananFisik, templateKop,
-      fileSurat, fileMime, fileName
+      status, instansi, penyimpananFisik, templateKop
     } = req.body;
     
-    let fileSuratName = (fileName) ? fileName : (req.file ? req.file.originalname : (templateKop ? templateKop : ''));
+    let fileSuratName = req.file ? req.file.originalname : (templateKop ? templateKop : '');
     let fileSuratPath = '';
     let fileData = null;
-    let mime = fileMime || null;
+    let fileMime = null;
     
-    if (fileSurat && fileSurat.startsWith('data:')) {
-      const base64Data = fileSurat.split(',')[1];
-      fileData = Buffer.from(base64Data, 'base64');
-    } else if (req.file) {
+    if (req.file) {
       fileData = req.file.buffer;
-      mime = req.file.mimetype;
+      fileMime = req.file.mimetype;
     } else if (templateKop) {
       const kopsuratRows = await pool.query('SELECT file_data FROM kopsurat WHERE nama = $1', [templateKop]);
       const kop = kopsuratRows.rows ? kopsuratRows.rows[0] : kopsuratRows[0];
@@ -519,7 +493,6 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
         doc.render({ tujuan, jenisSurat, tglSurat, dari, perihal, kategori, nomorSurat, instansi, judul: req.body.judul });
         fileData = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
         fileMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        mime = fileMime;
         const cleanName = String(perihal || req.body.judul || 'Surat').replace(/[^a-zA-Z0-9 -]/g, '').trim();
         fileSuratName = cleanName + '.docx';
       }
@@ -527,7 +500,7 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
 
     const inserted = await pool.query(
       'INSERT INTO surat (tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, file_data, file_mime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *',
-      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, fileData, mime]
+      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, fileData, fileMime]
     );
     
     const newId = inserted.rows[0].id;
@@ -566,29 +539,16 @@ app.put('/api/surat/:id', upload.single('fileSurat'), async (req, res) => {
       nomorSurat = surat.nomorSurat,
       status = surat.status,
       instansi = surat.instansi,
-      penyimpananFisik = surat.penyimpananFisik,
-      fileSurat, fileMime, fileName, templateKop
+      penyimpananFisik = surat.penyimpananFisik
     } = req.body;
 
-    const fileSuratName = (fileName) ? fileName : (req.file ? req.file.originalname : (templateKop ? templateKop : surat.fileSuratName));
+    const fileSuratName = req.file ? req.file.originalname : (req.body.templateKop ? req.body.templateKop : surat.fileSuratName);
     
-    let newFileData = null;
-    let newMime = null;
-    
-    if (fileSurat && fileSurat.startsWith('data:')) {
-      const base64Data = fileSurat.split(',')[1];
-      newFileData = Buffer.from(base64Data, 'base64');
-      newMime = fileMime;
-    } else if (req.file) {
-      newFileData = req.file.buffer;
-      newMime = req.file.mimetype;
-    }
-    
-    if (newFileData) {
+    if (req.file) {
       const finalPath = `/api/surat/download/${id}`;
       const updated = await pool.query(
         'UPDATE surat SET tujuan = $1, jenisSurat = $2, tglSurat = $3, dari = $4, instansi = $5, perihal = $6, kategori = $7, nomorSurat = $8, status = $9, penyimpananFisik = $10, fileSuratName = $11, fileSuratPath = $12, file_data = $13, file_mime = $14 WHERE id = $15 RETURNING *',
-        [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, finalPath, newFileData, newMime, id]
+        [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, finalPath, req.file.buffer, req.file.mimetype, id]
       );
       return res.json(mapSuratRow(updated.rows ? updated.rows[0] : updated[0]));
     } else {

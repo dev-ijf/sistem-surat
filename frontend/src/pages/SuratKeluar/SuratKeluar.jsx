@@ -29,13 +29,6 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingMaster, setIsSavingMaster] = useState(false);
 
-  const fileToBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
-
   useEffect(() => {
     const menu = 'surat-keluar';
     const hashStr = `#${menu}/${activeTab}/${encodeURIComponent(activeMasterCard)}`;
@@ -158,30 +151,12 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       if (category === 'Kop Surat') {
         const method = editingMaster ? 'PUT' : 'POST';
         const url = editingMaster ? `${API_BASE}/setting/${endpoint}/${editingMaster.id}` : `${API_BASE}/setting/${endpoint}`;
+        const formData = new FormData();
+        formData.append("nama", masterForm.nama);
+        if (masterForm.fileTemplate) formData.append("fileTemplate", masterForm.fileTemplate);
+        if (masterForm.instansi) formData.append("instansi", masterForm.instansi);
         
-        let fileBase64 = null;
-        let fileMime = null;
-        let fileName = null;
-        
-        if (masterForm.fileTemplate) {
-          fileBase64 = await fileToBase64(masterForm.fileTemplate);
-          fileMime = masterForm.fileTemplate.type;
-          fileName = masterForm.fileTemplate.name;
-        }
-
-        const payload = {
-          nama: masterForm.nama,
-          instansi: masterForm.instansi || '',
-          fileTemplate: fileBase64,
-          fileMime,
-          fileName
-        };
-        
-        const res = await fetch(url, { 
-          method, 
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload) 
-        });
+        const res = await fetch(url, { method, body: formData });
         if (!res.ok) throw new Error("Gagal menyimpan template");
         
         await fetchData();
@@ -269,37 +244,20 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       const method = editingSurat ? 'PUT' : 'POST';
       const url = editingSurat ? `${API_BASE}/surat/${editingSurat.id}` : `${API_BASE}/surat`;
 
-      let fileBase64 = null;
-      let fileMime = null;
-      let fileName = null;
-      
-      if (formData.fileSurat) {
-        fileBase64 = await fileToBase64(formData.fileSurat);
-        fileMime = formData.fileSurat.type;
-        fileName = formData.fileSurat.name;
-      }
+      const payload = new FormData();
+      payload.append("jenisSurat", jenisSuratTrimmed);
+      payload.append("tglSurat", formData.tglSurat || "");
+      payload.append("dari", dariTrimmed);
+      payload.append("instansi", instansiTrimmed);
+      payload.append("perihal", perihalTrimmed);
+      payload.append("judul", String(formData.judul || "").trim());
+      payload.append("kategori", formData.kategori || "Biasa");
+      payload.append("nomorSurat", formData.nomorSurat || "");
+      payload.append("status", formData.status || "Draft");
+      if (formData.fileSurat) payload.append("fileSurat", formData.fileSurat);
+      if (formData.templateKop && !editingSurat) payload.append("templateKop", formData.templateKop);
 
-      const payload = {
-        jenisSurat: jenisSuratTrimmed,
-        tglSurat: formData.tglSurat || "",
-        dari: dariTrimmed,
-        instansi: instansiTrimmed,
-        perihal: perihalTrimmed,
-        judul: String(formData.judul || "").trim(),
-        kategori: formData.kategori || "Biasa",
-        nomorSurat: formData.nomorSurat || "",
-        status: formData.status || "Draft",
-        templateKop: !editingSurat ? (formData.templateKop || "") : "",
-        fileSurat: fileBase64,
-        fileMime,
-        fileName
-      };
-
-      const res = await fetch(url, { 
-        method, 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload) 
-      });
+      const res = await fetch(url, { method, body: payload });
       if (!res.ok) throw new Error("Respon server gagal");
 
       const disposition = res.headers.get('Content-Disposition');
@@ -865,9 +823,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                         {(masterData['Kop Surat'] || [])
                           .filter(kop => {
                             if (!formData.instansi) return false;
-                            if (kop.instansi) {
-                              return kop.instansi.trim().toLowerCase() === formData.instansi.trim().toLowerCase();
-                            }
+                            if (kop.instansi) return kop.instansi.trim().toLowerCase() === formData.instansi.trim().toLowerCase();
                             // Fallback logic for old templates without instansi field
                             const keywords = formData.instansi.toLowerCase().split(' ').filter(w => w.length > 2);
                             return keywords.some(kw => kop.nama.toLowerCase().includes(kw));
