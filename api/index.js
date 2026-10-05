@@ -63,11 +63,11 @@ function formatTanggalIndonesia(dateStr) {
   if (!dateStr) return '';
   const dateObj = new Date(dateStr);
   if (isNaN(dateObj.getTime())) return String(dateStr);
-  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const months = ['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'];
   const day = dateObj.getDate();
   const month = months[dateObj.getMonth()];
   const year = dateObj.getFullYear();
-  return `${day} ${month} ${year}`;
+  return `Bandung, ${day} ${month} ${year}`;
 }
 
 const createMasterRoutes = (endpoint, table, fields) => {
