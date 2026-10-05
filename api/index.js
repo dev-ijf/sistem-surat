@@ -49,7 +49,7 @@ const query = async (sql, params = []) => {
 
 const mapSuratRow = (row) => {
   if (!row) return row;
-  return {
+  const mapped = {
     ...row,
     jenisSurat: row.jenisSurat ?? row.jenissurat,
     tglSurat: row.tglSurat ?? row.tglsurat,
@@ -58,6 +58,8 @@ const mapSuratRow = (row) => {
     fileSuratName: row.fileSuratName ?? row.filesuratname,
     fileSuratPath: row.fileSuratPath ?? row.filesuratpath
   };
+  delete mapped.file_data;
+  return mapped;
 };
 
 const createMasterRoutes = (endpoint, table, fields) => {
@@ -369,7 +371,7 @@ app.post('/api/auth/google', async (req, res) => {
 
 app.get('/api/surat', async (req, res) => {
   try {
-    const rows = await query('SELECT * FROM surat ORDER BY id DESC');
+    const rows = await query('SELECT id, tujuan, jenissurat, tglsurat, dari, instansi, perihal, judul, kategori, nomorsurat, status, penyimpananfisik, filesuratname, filesuratpath, created_at FROM surat ORDER BY id DESC');
     res.json(rows.map(mapSuratRow));
   } catch (err) {
     console.error('GET /api/surat error', err);
@@ -386,7 +388,7 @@ createMasterRoutes('kepada', 'kepada_internal', ['nama']);
 
 app.get('/api/setting/kopsurat', async (req, res) => {
   try {
-    const rows = await query('SELECT * FROM kopsurat ORDER BY id');
+    const rows = await query('SELECT id, nama, file_path, instansi FROM kopsurat ORDER BY id');
     res.json(rows);
   } catch (err) {
     console.error(err);

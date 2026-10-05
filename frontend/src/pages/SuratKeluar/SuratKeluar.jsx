@@ -865,7 +865,9 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                         {(masterData['Kop Surat'] || [])
                           .filter(kop => {
                             if (!formData.instansi) return false;
-                            if (kop.instansi) return kop.instansi === formData.instansi;
+                            if (kop.instansi) {
+                              return kop.instansi.trim().toLowerCase() === formData.instansi.trim().toLowerCase();
+                            }
                             // Fallback logic for old templates without instansi field
                             const keywords = formData.instansi.toLowerCase().split(' ').filter(w => w.length > 2);
                             return keywords.some(kw => kop.nama.toLowerCase().includes(kw));
