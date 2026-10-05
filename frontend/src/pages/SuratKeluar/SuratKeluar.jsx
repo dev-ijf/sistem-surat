@@ -824,11 +824,16 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                           .filter(kop => {
                             if (!formData.instansi) return false;
                             const currentInstansi = String(formData.instansi).trim().toLowerCase();
+                            
+                            // 1. Check exact or partial match on the assigned instansi
                             if (kop.instansi) {
                                const kopInstansi = String(kop.instansi).trim().toLowerCase();
-                               if (kopInstansi === currentInstansi) return true;
+                               if (kopInstansi === currentInstansi || currentInstansi.includes(kopInstansi) || kopInstansi.includes(currentInstansi)) {
+                                 return true;
+                               }
                             }
-                            // Fallback logic for old templates without instansi field
+                            
+                            // 2. Fallback check: check if the template name contains the instansi name
                             const keywords = currentInstansi.split(' ').filter(w => w.length > 2);
                             return keywords.some(kw => kop.nama.toLowerCase().includes(kw));
                           })
