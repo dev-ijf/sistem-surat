@@ -8,14 +8,18 @@ const getShortCode = (value) => {
   return words.slice(0, 2).map(word => word[0]).join('').toUpperCase();
 };
 
-const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoading, isConnected, API_BASE, globalSearch }) => {
+const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoading, isConnected, API_BASE, globalSearch, forceActiveTab }) => {
   const [activeTab, setActiveTab] = useState(() => {
+    if (forceActiveTab) return forceActiveTab;
     const hashParts = window.location.hash.replace('#', '').split('/');
     return hashParts[1] || 'daftar';
   });
   const [activeMasterTab] = useState('Jenis Surat');
   const [activeMasterCard, setActiveMasterCard] = useState(() => {
     const hashParts = window.location.hash.replace('#', '').split('/');
+    if (hashParts[0] === 'master-data') {
+      return hashParts[1] ? decodeURIComponent(hashParts[1]) : 'Kategori Surat';
+    }
     return hashParts[2] ? decodeURIComponent(hashParts[2]) : 'Kategori Surat';
   });
 
@@ -30,8 +34,10 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   const [isSavingMaster, setIsSavingMaster] = useState(false);
 
   useEffect(() => {
-    const menu = 'surat-keluar';
-    const hashStr = `#${menu}/${activeTab}/${encodeURIComponent(activeMasterCard)}`;
+    const menu = forceActiveTab === 'master' ? 'master-data' : 'surat-keluar';
+    const hashStr = forceActiveTab === 'master' 
+      ? `#${menu}/${encodeURIComponent(activeMasterCard)}`
+      : `#${menu}/${activeTab}/${encodeURIComponent(activeMasterCard)}`;
     const currentHash = window.location.hash;
 
     if (currentHash !== hashStr && currentHash.startsWith(`#${menu}`)) {
@@ -41,7 +47,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
         window.history.pushState(null, '', hashStr);
       }
     }
-  }, [activeTab, activeMasterCard]);
+  }, [activeTab, activeMasterCard, forceActiveTab]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -49,6 +55,8 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       if (hashParts[0] === 'surat-keluar') {
         if (hashParts[1]) setActiveTab(hashParts[1]);
         if (hashParts[2]) setActiveMasterCard(decodeURIComponent(hashParts[2]));
+      } else if (hashParts[0] === 'master-data') {
+        if (hashParts[1]) setActiveMasterCard(decodeURIComponent(hashParts[1]));
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -380,18 +388,20 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
   return (
     <>
-      <div className="flex flex-col gap-4 mb-6 border-b border-slate-200 md:flex-row md:items-center md:justify-between mt-2">
-        <div className="flex items-center gap-6">
-          <button onClick={() => setActiveTab('daftar')} className={`pb-4 flex items-center gap-2 text-xs md:text-sm font-semibold uppercase tracking-[0.14em] transition-all relative ${activeTab === 'daftar' ? 'text-blue-600' : 'text-slate-400'}`}>
-            <FileText size={16} /> Daftar Surat
-            {activeTab === 'daftar' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full" />}
-          </button>
-          <button onClick={() => setActiveTab('master')} className={`pb-4 flex items-center gap-2 text-xs md:text-sm font-semibold uppercase tracking-[0.14em] transition-all relative ${activeTab === 'master' ? 'text-blue-600' : 'text-slate-400'}`}>
-            <Settings size={16} /> Master Data
-            {activeTab === 'master' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full" />}
-          </button>
+      {!forceActiveTab && (
+        <div className="flex flex-col gap-4 mb-6 border-b border-slate-200 md:flex-row md:items-center md:justify-between mt-2">
+          <div className="flex items-center gap-6">
+            <button onClick={() => setActiveTab('daftar')} className={`pb-4 flex items-center gap-2 text-xs md:text-sm font-semibold uppercase tracking-[0.14em] transition-all relative ${activeTab === 'daftar' ? 'text-blue-600' : 'text-slate-400'}`}>
+              <FileText size={16} /> Daftar Surat
+              {activeTab === 'daftar' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full" />}
+            </button>
+            <button onClick={() => setActiveTab('master')} className={`pb-4 flex items-center gap-2 text-xs md:text-sm font-semibold uppercase tracking-[0.14em] transition-all relative ${activeTab === 'master' ? 'text-blue-600' : 'text-slate-400'}`}>
+              <Settings size={16} /> Master Data
+              {activeTab === 'master' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full" />}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {activeTab === 'daftar' ? (
         <div>

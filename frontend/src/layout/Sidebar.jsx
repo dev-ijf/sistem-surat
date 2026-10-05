@@ -66,6 +66,11 @@ const Sidebar = ({ activeMenu, setActiveMenu, onLogout, userRole }) => {
                 <Users size={20} />
                 <span>Manajemen User</span>
               </div>
+              
+              <div onClick={() => setActiveMenu('master-data')} className={getMenuItemClass('master-data')}>
+                <Settings size={20} />
+                <span>Master Data</span>
+              </div>
             </>
           )}
         </div>

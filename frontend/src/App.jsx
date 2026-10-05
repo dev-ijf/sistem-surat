@@ -32,7 +32,7 @@ const App = () => {
 
   const [activeMenu, setActiveMenu] = useState(() => {
     const hash = window.location.hash.replace('#', '').split('/')[0];
-    return ['dashboard', 'surat-keluar', 'manajemen-user'].includes(hash) ? hash : 'dashboard';
+    return ['dashboard', 'surat-keluar', 'manajemen-user', 'master-data'].includes(hash) ? hash : 'dashboard';
   });
   const [isConnected, setIsConnected] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -111,7 +111,7 @@ const App = () => {
   useEffect(() => {
     const handlePopState = () => {
       const hash = window.location.hash.replace('#', '').split('/')[0];
-      if (['dashboard', 'surat-keluar', 'manajemen-user'].includes(hash)) {
+      if (['dashboard', 'surat-keluar', 'manajemen-user', 'master-data'].includes(hash)) {
         setActiveMenu(hash);
       } else {
         setActiveMenu('dashboard');
@@ -136,6 +136,7 @@ const App = () => {
       case 'dashboard': return 'Dashboard Utama';
       case 'surat-keluar': return 'Manajemen Surat Keluar';
       case 'manajemen-user': return 'Manajemen User';
+      case 'master-data': return 'Master Data';
       default: return 'Sistem Surat';
     }
   };
@@ -209,6 +210,7 @@ const App = () => {
 
           {activeMenu === 'surat-keluar' && (
             <SuratKeluar
+              key="surat-keluar"
               suratList={suratList}
               masterData={masterData}
               setMasterData={setMasterData}
@@ -217,6 +219,22 @@ const App = () => {
               isConnected={isConnected}
               API_BASE={API_BASE}
               globalSearch={globalSearch}
+              forceActiveTab="daftar"
+            />
+          )}
+
+          {activeMenu === 'master-data' && (
+            <SuratKeluar
+              key="master-data"
+              suratList={suratList}
+              masterData={masterData}
+              setMasterData={setMasterData}
+              fetchData={fetchData}
+              isLoading={isLoading}
+              isConnected={isConnected}
+              API_BASE={API_BASE}
+              globalSearch={globalSearch}
+              forceActiveTab="master"
             />
           )}
         </main>

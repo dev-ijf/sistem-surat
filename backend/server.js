@@ -16,7 +16,7 @@ const convertToPdf = (inputPath, outputPath) => {
     const safeInput = path.resolve(inputPath).replace(/'/g, "''");
     const safeOutput = path.resolve(outputPath).replace(/'/g, "''");
     const psCommand = `$word = New-Object -ComObject Word.Application; $word.Visible = $false; $doc = $word.Documents.Open('${safeInput}'); $doc.SaveAs([ref] '${safeOutput}', [ref] 17); $doc.Close(); $word.Quit();`;
-    
+
     exec(`powershell -Command "${psCommand}"`, (error, stdout, stderr) => {
       if (error) {
         console.error('PDF Conversion Error:', error);
@@ -58,16 +58,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-function formatTanggalIndonesia(dateStr) {
-  if (!dateStr) return '';
-  const dateObj = new Date(dateStr);
-  if (isNaN(dateObj.getTime())) return String(dateStr);
-  const months = ['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'];
-  const day = dateObj.getDate();
-  const month = months[dateObj.getMonth()];
-  const year = dateObj.getFullYear();
-  return `Bandung, ${day} ${month} ${year}`;
-}
 const query = async (sql, params = []) => {
   const result = await pool.query(sql, params);
   return result.rows;
@@ -217,7 +207,7 @@ const initializeDatabase = async () => {
   )`);
   try {
     await query(`ALTER TABLE kopsurat ADD COLUMN IF NOT EXISTS instansi VARCHAR(255) DEFAULT ''`);
-  } catch(e) {
+  } catch (e) {
     console.error('Error adding instansi column to kopsurat', e);
   }
 
@@ -345,7 +335,7 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
           doc.render({
             tujuan: tujuan,
             jenisSurat: jenisSurat,
-            tglSurat: formatTanggalIndonesia(tglSurat),
+            tglSurat: tglSurat,
             dari: dari,
             perihal: perihal,
             judul: judul,
