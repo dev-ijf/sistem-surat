@@ -99,6 +99,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   const initialFormData = {
     jenisSurat: '',
     dari: '',
+    tujuan: '',
     instansi: '',
     tglSurat: new Date().toISOString().split('T')[0],
     perihal: '',
@@ -234,9 +235,11 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     const jenisSuratTrimmed = String(formData.jenisSurat || "").trim();
     const dariTrimmed = String(formData.dari || "").trim();
     const instansiTrimmed = String(formData.instansi || "").trim();
+    const tujuanTrimmed = String(formData.tujuan || "").trim();
+    const judulTrimmed = String(formData.judul || "").trim();
 
-    if (!perihalTrimmed || !jenisSuratTrimmed || !dariTrimmed || !instansiTrimmed) {
-      return alert("Kolom wajib diisi (Perihal, Jenis, Pengirim, Instansi)");
+    if (!perihalTrimmed || !jenisSuratTrimmed || !dariTrimmed || !instansiTrimmed || !tujuanTrimmed || !judulTrimmed) {
+      return alert("Kolom wajib diisi (Judul, Perihal, Jenis, Pengirim, Tujuan, Instansi)");
     }
 
     setIsSaving(true);
@@ -248,9 +251,10 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       payload.append("jenisSurat", jenisSuratTrimmed);
       payload.append("tglSurat", formData.tglSurat || "");
       payload.append("dari", dariTrimmed);
+      payload.append("tujuan", tujuanTrimmed);
       payload.append("instansi", instansiTrimmed);
       payload.append("perihal", perihalTrimmed);
-      payload.append("judul", String(formData.judul || "").trim());
+      payload.append("judul", judulTrimmed);
       payload.append("kategori", formData.kategori || "Biasa");
       payload.append("nomorSurat", formData.nomorSurat || "");
       payload.append("status", formData.status || "Draft");
@@ -768,6 +772,13 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                     </select>
                   </div>
                   <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Tujuan <span className="text-red-500">*</span></label>
+                    <select className="input-field" value={formData.tujuan} onChange={e => setFormData({ ...formData, tujuan: e.target.value })}>
+                      <option value="">-- Pilih Tujuan --</option>
+                      {masterData['Kepada (Internal)']?.map(s => <option key={s.id} value={s.nama}>{s.nama}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
                     <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Kategori <span className="text-red-500">*</span></label>
                     <select className="input-field" value={formData.kategori} onChange={e => setFormData({ ...formData, kategori: e.target.value })}>
                       {masterData['Kategori Surat']?.map(k => <option key={k.id} value={k.nama}>{k.nama}</option>)}
@@ -778,7 +789,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                     <textarea className="input-field min-h-20 resize-none" value={formData.perihal} onChange={e => setFormData({ ...formData, perihal: e.target.value })} placeholder="Ringkasan isi surat..." />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Judul Surat</label>
+                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Judul Surat <span className="text-red-500">*</span></label>
                     <textarea className="input-field min-h-20 resize-none" value={formData.judul} onChange={e => setFormData({ ...formData, judul: e.target.value })} placeholder="Judul surat..." />
                   </div>
                 </div>
