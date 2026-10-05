@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Send, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Send, Users, LogOut, Settings } from 'lucide-react';
 
 const Sidebar = ({ activeMenu, setActiveMenu, onLogout, userRole }) => {
   
