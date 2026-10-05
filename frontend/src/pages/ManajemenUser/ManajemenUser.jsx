@@ -331,12 +331,6 @@ const ManajemenUser = ({ globalSearch }) => {
                 <h2 className="text-lg font-bold !text-slate-900 tracking-tight">Tambah User</h2>
                 <p className="text-sm text-slate-500">Tambahkan pengguna baru</p>
               </div>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
-              >
-                <X size={18} />
-              </button>
             </div>
 
             <div className="p-6 space-y-4">
@@ -436,12 +430,6 @@ const ManajemenUser = ({ globalSearch }) => {
                 <h2 className="text-lg font-bold !text-slate-900 tracking-tight">Edit User</h2>
                 <p className="text-sm text-slate-500">Perbarui informasi pengguna</p>
               </div>
-              <button
-                onClick={() => { setShowEditModal(false); setEditingUser(null); }}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
-              >
-                <X size={18} />
-              </button>
             </div>
 
             <div className="p-6 space-y-4">
@@ -535,7 +523,7 @@ const ManajemenUser = ({ globalSearch }) => {
 
       {showDeleteModal && deletingUser && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[450px] p-8 min-h-[200px] flex flex-col justify-between">
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[450px] p-6 flex flex-col gap-6">
             <p className="text-[15px] font-medium text-slate-800">
               Apakah Anda yakin ingin menghapus pengguna <span className="font-bold">{deletingUser.nama}</span>?
             </p>
@@ -566,7 +554,7 @@ const ManajemenUser = ({ globalSearch }) => {
                     alert('Terjadi kesalahan pada server');
                   }
                 }}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-sm transition-all text-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-sm transition-all text-sm"
               >
                 Hapus
               </button>

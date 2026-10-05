@@ -714,7 +714,6 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20">
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
               <h2 className="text-lg font-bold !text-slate-900">{editingMaster ? 'Update' : 'New'} {activeMasterCard || activeMasterTab}</h2>
-              <button onClick={() => setShowMasterModal(false)} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
             </div>
             <div className="p-5 space-y-5">
               <div className="space-y-2">
@@ -762,7 +761,6 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                 <h2 className="text-lg font-bold !text-slate-900 tracking-tight">{editingSurat ? 'Perbarui Arsip' : 'Formulir Surat Baru'}</h2>
                 <p className="text-[10px] font-medium text-slate-400 uppercase tracking- mt-0.5">Sinkronisasi data otomatis</p>
               </div>
-              <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:text-slate-900 transition-all"><X size={18} /></button>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-hide">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -891,13 +889,13 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
       {deleteModalConfig.isOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[450px] p-8 min-h-[200px] flex flex-col justify-between">
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[450px] p-6 flex flex-col gap-6">
             <p className="text-[15px] font-medium text-slate-800">
               {deleteModalConfig.targetName}
             </p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-700 px-6 py-2.5 hover:bg-slate-50 border border-slate-300 rounded-xl transition-all">Batal</button>
-              <button onClick={deleteModalConfig.onConfirm} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm">Hapus</button>
+              <button onClick={deleteModalConfig.onConfirm} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm">Hapus</button>
             </div>
           </div>
         </div>
