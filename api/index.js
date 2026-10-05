@@ -59,6 +59,17 @@ const mapSuratRow = (row) => {
   };
 };
 
+function formatTanggalIndonesia(dateStr) {
+  if (!dateStr) return '';
+  const dateObj = new Date(dateStr);
+  if (isNaN(dateObj.getTime())) return String(dateStr);
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const day = dateObj.getDate();
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  return `${day} ${month} ${year}`;
+}
+
 const createMasterRoutes = (endpoint, table, fields) => {
   app.get(`/api/setting/${endpoint}`, async (req, res) => {
     try {
@@ -492,7 +503,7 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
       if (kop && kop.file_data) {
         const zip = new PizZip(kop.file_data);
         const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, delimiters: { start: '{{', end: '}}' } });
-        doc.render({ tujuan, jenisSurat, tglSurat, dari, perihal, kategori, nomorSurat, instansi, judul: req.body.judul });
+        doc.render({ tujuan, jenisSurat, tglSurat: formatTanggalIndonesia(tglSurat), dari, perihal, kategori, nomorSurat, instansi, judul: req.body.judul });
         fileData = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
         fileMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         const cleanName = String(perihal || req.body.judul || 'Surat').replace(/[^a-zA-Z0-9 -]/g, '').trim();
@@ -600,7 +611,7 @@ app.get(['/api/surat/preview-template/:id', '/api/surat/preview-template/:id/:fi
       doc.render({
         tujuan: surat.tujuan,
         jenisSurat: surat.jenissurat,
-        tglSurat: surat.tglsurat,
+        tglSurat: formatTanggalIndonesia(surat.tglsurat),
         dari: surat.dari,
         perihal: surat.perihal,
         judul: surat.judul,

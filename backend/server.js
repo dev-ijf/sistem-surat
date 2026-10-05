@@ -58,6 +58,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+function formatTanggalIndonesia(dateStr) {
+  if (!dateStr) return '';
+  const dateObj = new Date(dateStr);
+  if (isNaN(dateObj.getTime())) return String(dateStr);
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const day = dateObj.getDate();
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  return `${day} ${month} ${year}`;
+}
 const query = async (sql, params = []) => {
   const result = await pool.query(sql, params);
   return result.rows;
@@ -335,7 +345,7 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
           doc.render({
             tujuan: tujuan,
             jenisSurat: jenisSurat,
-            tglSurat: tglSurat,
+            tglSurat: formatTanggalIndonesia(tglSurat),
             dari: dari,
             perihal: perihal,
             judul: judul,
