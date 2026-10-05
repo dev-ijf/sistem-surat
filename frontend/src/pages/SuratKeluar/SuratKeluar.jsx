@@ -153,8 +153,8 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
         const url = editingMaster ? `${API_BASE}/setting/${endpoint}/${editingMaster.id}` : `${API_BASE}/setting/${endpoint}`;
         const formData = new FormData();
         formData.append("nama", masterForm.nama);
-        if (masterForm.fileTemplate) formData.append("fileTemplate", masterForm.fileTemplate);
         if (masterForm.instansi) formData.append("instansi", masterForm.instansi);
+        if (masterForm.fileTemplate) formData.append("fileTemplate", masterForm.fileTemplate);
         
         const res = await fetch(url, { method, body: formData });
         if (!res.ok) throw new Error("Gagal menyimpan template");
@@ -823,9 +823,13 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                         {(masterData['Kop Surat'] || [])
                           .filter(kop => {
                             if (!formData.instansi) return false;
-                            if (kop.instansi) return kop.instansi.trim().toLowerCase() === formData.instansi.trim().toLowerCase();
+                            const currentInstansi = String(formData.instansi).trim().toLowerCase();
+                            if (kop.instansi) {
+                               const kopInstansi = String(kop.instansi).trim().toLowerCase();
+                               if (kopInstansi === currentInstansi) return true;
+                            }
                             // Fallback logic for old templates without instansi field
-                            const keywords = formData.instansi.toLowerCase().split(' ').filter(w => w.length > 2);
+                            const keywords = currentInstansi.split(' ').filter(w => w.length > 2);
                             return keywords.some(kw => kop.nama.toLowerCase().includes(kw));
                           })
                           .map((kop, idx) => (

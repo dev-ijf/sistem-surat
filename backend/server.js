@@ -199,6 +199,18 @@ const initializeDatabase = async () => {
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
 
+  await query(`CREATE TABLE IF NOT EXISTS kopsurat (
+    id SERIAL PRIMARY KEY,
+    nama VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) DEFAULT '',
+    instansi VARCHAR(255) DEFAULT ''
+  )`);
+  try {
+    await query(`ALTER TABLE kopsurat ADD COLUMN IF NOT EXISTS instansi VARCHAR(255) DEFAULT ''`);
+  } catch(e) {
+    console.error('Error adding instansi column to kopsurat', e);
+  }
+
   const seedIfEmpty = async (table, rows, fields) => {
     const result = await pool.query(`SELECT COUNT(*) AS count FROM ${table}`);
     const count = Number(result.rows[0].count);
@@ -245,6 +257,18 @@ const initializeDatabase = async () => {
   await seedIfEmpty('users', [
     { nama: 'Admin Surat', email: 'kukies.chocolate@gmail.com', role: 'Admin', status: 'Aktif' }
   ], ['nama', 'email', 'role', 'status']);
+
+  await seedIfEmpty('kopsurat', [
+    { nama: 'Kop Surat Akademi Insan Mulia.docx' },
+    { nama: 'Kop Surat Indonesia Juara.docx' },
+    { nama: 'Kop Surat Kreativa Education Network.docx' },
+    { nama: 'Kop Surat Kreativa Global School  729 jatisari.docx' },
+    { nama: 'Kop Surat Kreativa Global School 668.docx' },
+    { nama: 'Kop Surat Kreativa Global School No.39.docx' },
+    { nama: 'Kop Surat Kreativa Global School.docx' },
+    { nama: 'Kop Surat Kreativa Insan Mulia.docx' },
+    { nama: 'Kop Surat Talenta Juara.docx' }
+  ], ['nama']);
 };
 
 app.get('/', (req, res) => {

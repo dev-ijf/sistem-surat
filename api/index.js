@@ -396,6 +396,7 @@ app.get('/api/setting/kopsurat', async (req, res) => {
 app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res) => {
   try {
     let { nama, instansi } = req.body;
+    instansi = (instansi || '').trim();
     if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
     
     let filePath = '';
@@ -422,6 +423,7 @@ app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, 
   try {
     const id = Number(req.params.id);
     let { nama, instansi } = req.body;
+    instansi = (instansi || '').trim();
     if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
     
     const existing = await query('SELECT id, nama, file_path FROM kopsurat WHERE id = $1', [id]);

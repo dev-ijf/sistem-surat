@@ -21,6 +21,18 @@ const Dashboard = ({ suratList = [], user }) => {
     .sort((a, b) => new Date(b.tglSurat) - new Date(a.tglSurat))
     .slice(0, 4);
 
+  // Hitung statistik surat per bulan dari data nyata
+  const currentYear = new Date().getFullYear();
+  const monthlyData = Array(12).fill(0);
+  suratList.forEach(s => {
+    if (!s.tglSurat) return;
+    const d = new Date(s.tglSurat);
+    if (d.getFullYear() === currentYear) {
+      monthlyData[d.getMonth()]++;
+    }
+  });
+  const maxMonthly = Math.max(...monthlyData, 1);
+
   return (
     <div className="space-y-4">
       
@@ -80,7 +92,7 @@ const Dashboard = ({ suratList = [], user }) => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="text-blue-600" size={20} />
-              <h3 className="font-bold text-slate-900 text-base">Statistik Pembuatan Surat 2026</h3>
+              <h3 className="font-bold text-slate-900 text-base">Statistik Pembuatan Surat {currentYear}</h3>
             </div>
             <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
               <span className="flex items-center gap-1.5">
@@ -90,24 +102,24 @@ const Dashboard = ({ suratList = [], user }) => {
           </div>
 
           <div className="h-64 w-full flex items-end justify-between gap-2 px-2 pt-10 pb-4 border-b border-slate-200/80 relative">
-            <div className="absolute inset-x-0 top-0 border-t border-slate-200/60 flex items-center text-[10px] text-slate-400 pl-2">18</div>
-            <div className="absolute inset-x-0 top-1/4 border-t border-slate-200/60 flex items-center text-[10px] text-slate-400 pl-2">14</div>
-            <div className="absolute inset-x-0 top-2/4 border-t border-slate-200/60 flex items-center text-[10px] text-slate-400 pl-2">10</div>
-            <div className="absolute inset-x-0 top-3/4 border-t border-slate-200/60 flex items-center text-[10px] text-slate-400 pl-2">6</div>
+            <div className="absolute inset-x-0 top-0 border-t border-slate-200/60 flex items-center text-[10px] text-slate-400 pl-2">{maxMonthly}</div>
+            <div className="absolute inset-x-0 top-1/4 border-t border-slate-200/60 flex items-center text-[10px] text-slate-400 pl-2">{Math.round(maxMonthly * 0.75)}</div>
+            <div className="absolute inset-x-0 top-2/4 border-t border-slate-200/60 flex items-center text-[10px] text-slate-400 pl-2">{Math.round(maxMonthly * 0.5)}</div>
+            <div className="absolute inset-x-0 top-3/4 border-t border-slate-200/60 flex items-center text-[10px] text-slate-400 pl-2">{Math.round(maxMonthly * 0.25)}</div>
 
             <div className="w-full h-full flex items-end justify-around z-10">
-              {[16, 8, 4, 3, 2, 2, 1, 1, 1, 1, 1, 1].map((val, idx) => (
+              {monthlyData.map((val, idx) => (
                 <div key={idx} className="flex flex-col items-center gap-1 h-full justify-end group">
                   <div 
                     className="w-3 bg-linear-to-t from-cyan-400 to-emerald-400 rounded-t-md transition-all duration-300 group-hover:brightness-110" 
-                    style={{ height: `${val * 12}px` }}
+                    style={{ height: `${Math.max((val / maxMonthly) * 192, val > 0 ? 4 : 2)}px` }}
                   />
                   <span className="text-[10px] text-slate-500 mt-1">{idx + 1}</span>
                 </div>
               ))}
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 text-center mt-3">Grafik representasi volume pembuatan arsip surat keluar setiap bulannya.</p>
+          <p className="text-[11px] text-slate-400 text-center mt-3">Grafik volume pembuatan arsip surat keluar per bulan berdasarkan data nyata tahun {currentYear}.</p>
         </div>
 
         <div className="flex flex-col">
