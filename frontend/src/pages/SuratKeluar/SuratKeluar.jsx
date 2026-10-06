@@ -816,14 +816,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                       {masterData['Instansi']?.map(i => <option key={i.id} value={i.nama}>{i.nama}</option>)}
                     </select>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Status Surat <span className="text-red-500">*</span></label>
-                    <select className="input-field" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                      <option value="Draft">Draft</option>
-                      <option value="Terkirim">Terkirim</option>
-                      <option value="Selesai">Selesai</option>
-                    </select>
-                  </div>
+
                   {editingSurat ? (
                     <div className="space-y-1">
                       <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">Upload Dokumen Final (Opsional)</label>
