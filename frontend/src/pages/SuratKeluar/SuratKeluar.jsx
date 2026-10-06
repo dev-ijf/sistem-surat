@@ -433,18 +433,6 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Total Surat</p>
                 <p className="mt-0.5 text-xl font-bold text-slate-900">{totalCount}</p>
               </div>
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Draft</p>
-                <p className="mt-0.5 text-xl font-bold text-amber-500">{draftCount}</p>
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Terkirim</p>
-                <p className="mt-0.5 text-xl font-bold text-blue-600">{terkirimCount}</p>
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Selesai</p>
-                <p className="mt-0.5 text-xl font-bold text-emerald-500">{selesaiCount}</p>
-              </div>
             </div>
           </div>
 
