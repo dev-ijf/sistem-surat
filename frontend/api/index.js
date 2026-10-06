@@ -67,7 +67,7 @@ function formatTanggalIndonesia(dateStr) {
   const day = dateObj.getDate();
   const month = months[dateObj.getMonth()];
   const year = dateObj.getFullYear();
-  return `Bandung, ${day} ${month} ${year}`;
+  return `${day} ${month} ${year}`;
 }
 
 const createMasterRoutes = (endpoint, table, fields) => {
