@@ -1,6 +1,48 @@
 import React from 'react';
 import { FileText, Send, Calendar, TrendingUp, Bell, Edit3, CheckCircle } from 'lucide-react';
 
+const AnimatedCounter = ({ value, duration = 1500 }) => {
+  const [count, ReactSetCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (value === 0) {
+      ReactSetCount(0);
+      return;
+    }
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      ReactSetCount(Math.floor(easeOutQuart * value));
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        ReactSetCount(value);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [value, duration]);
+
+  return <span>{count}</span>;
+};
+
+const StatCard = ({ title, value, subtitle, icon: Icon, colorClass }) => (
+  <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col md:flex-row md:items-center gap-5 relative overflow-hidden group">
+    <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 blur-2xl group-hover:opacity-20 transition-opacity duration-500 ${colorClass.split(' ')[0]}`}></div>
+    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${colorClass}`}>
+      <Icon size={24} strokeWidth={2.2} />
+    </div>
+    <div>
+      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{title}</p>
+      <h3 className="text-3xl font-extrabold text-slate-800 leading-none">
+        <AnimatedCounter value={value} />
+      </h3>
+      <p className="text-xs font-medium text-slate-400 mt-1.5">{subtitle}</p>
+    </div>
+  </div>
+);
+
 const Dashboard = ({ suratList = [], user }) => {
   const totalSurat = suratList.length;
   const draftCount = suratList.filter(s => String(s.status).toLowerCase() === 'draft').length;
@@ -44,46 +86,27 @@ const Dashboard = ({ suratList = [], user }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 text-black shadow-sm flex flex-col">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Total Surat Keluar</p>
-            <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
-              <FileText size={18} strokeWidth={2.5} />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-3xl font-semibold text-slate-800 leading-none">{totalSurat}</h3>
-            <p className="text-[10px] font-medium text-slate-400 mt-1.5">Keseluruhan arsip</p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 text-black shadow-sm flex flex-col">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Draft Surat</p>
-            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-              <Edit3 size={18} strokeWidth={2.5} />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-3xl font-semibold text-slate-800 leading-none">{draftCount}</h3>
-            <p className="text-[10px] font-medium text-slate-400 mt-1.5">Menunggu penyelesaian</p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 text-black shadow-sm flex flex-col">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400">Selesai / Terkirim</p>
-            <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-              <CheckCircle size={18} strokeWidth={2.5} />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-3xl font-semibold text-slate-800 leading-none">{selesaiCount}</h3>
-            <p className="text-[10px] font-medium text-slate-400 mt-1.5">Surat berhasil diproses</p>
-          </div>
-        </div>
-
+        <StatCard 
+          title="Total Surat Keluar" 
+          value={totalSurat} 
+          subtitle="Keseluruhan arsip" 
+          icon={FileText} 
+          colorClass="bg-indigo-50 text-indigo-600" 
+        />
+        <StatCard 
+          title="Draft Surat" 
+          value={draftCount} 
+          subtitle="Menunggu penyelesaian" 
+          icon={Edit3} 
+          colorClass="bg-amber-50 text-amber-600" 
+        />
+        <StatCard 
+          title="Selesai / Terkirim" 
+          value={selesaiCount} 
+          subtitle="Surat berhasil diproses" 
+          icon={CheckCircle} 
+          colorClass="bg-emerald-50 text-emerald-600" 
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
