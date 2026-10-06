@@ -409,7 +409,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
             <div className="flex items-center gap-2.5">
               <FileText className="text-indigo-600" size={26} strokeWidth={2} />
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold text-black">Manajemen Surat</h2>
+                <h2 className="text-xl font-bold !text-black" style={{ color: 'black' }}>Manajemen Surat</h2>
                 <p className="text-sm text-slate-500 mt-0.5">Kelola data surat keluar dan arsip digital</p>
               </div>
             </div>
