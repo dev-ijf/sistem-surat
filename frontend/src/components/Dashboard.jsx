@@ -85,30 +85,6 @@ const Dashboard = ({ suratList = [], user }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <StatCard 
-          title="Total Surat Keluar" 
-          value={totalSurat} 
-          subtitle="Keseluruhan arsip" 
-          icon={FileText} 
-          colorClass="bg-indigo-50 text-indigo-600" 
-        />
-        <StatCard 
-          title="Draft Surat" 
-          value={draftCount} 
-          subtitle="Menunggu penyelesaian" 
-          icon={Edit3} 
-          colorClass="bg-amber-50 text-amber-600" 
-        />
-        <StatCard 
-          title="Selesai / Terkirim" 
-          value={selesaiCount} 
-          subtitle="Surat berhasil diproses" 
-          icon={CheckCircle} 
-          colorClass="bg-emerald-50 text-emerald-600" 
-        />
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
         
         <div className="lg:col-span-2 flex flex-col justify-between">
