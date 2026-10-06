@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Settings, Search, Trash2, Edit2, X, Save, Loader2, Hash, Calendar, Copy, Filter, Tag, Users, Building, ArrowRight, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { Plus, FileText, Settings, Search, Trash2, Edit2, X, Save, Loader2, Hash, Calendar, Copy, Filter, Tag, Users, Building, ArrowRight, ChevronLeft, ChevronRight, Download, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const getShortCode = (value) => {
   const words = String(value || '').trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return '';
   if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
   return words.slice(0, 2).map(word => word[0]).join('').toUpperCase();
+};
+
+const Toast = ({ message, type = 'error' }) => {
+  return (
+    <div className={`fixed top-4 right-4 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-lg shadow-xl text-white text-sm font-medium transition-all animate-in slide-in-from-top-2 fade-in duration-300 ${type === 'error' ? 'bg-red-500' : 'bg-emerald-500'}`}>
+      {type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+      {message}
+    </div>
+  );
 };
 
 const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoading, isConnected, API_BASE, globalSearch, forceActiveTab }) => {
@@ -32,6 +41,12 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingMaster, setIsSavingMaster] = useState(false);
+
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const showToast = (message, type = 'error') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
+  };
 
   useEffect(() => {
     const menu = forceActiveTab === 'master' ? 'master-data' : 'surat-keluar';
@@ -150,7 +165,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
   };
 
   const handleSaveMaster = async () => {
-    if (!masterForm.nama.trim()) return alert("Nama referensi wajib diisi.");
+    if (!masterForm.nama.trim()) return showToast("Nama referensi wajib diisi.");
 
     setIsSavingMaster(true);
     try {
@@ -158,6 +173,9 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       const endpoint = getMasterEndpoint(category);
 
       if (category === 'Kop Surat') {
+        if (masterForm.fileTemplate && !masterForm.fileTemplate.name.toLowerCase().endsWith('.docx')) {
+          return showToast("Gagal! Template harus berformat Word Document (.docx)");
+        }
         const method = editingMaster ? 'PUT' : 'POST';
         const url = editingMaster ? `${API_BASE}/setting/${endpoint}/${editingMaster.id}` : `${API_BASE}/setting/${endpoint}`;
         const formData = new FormData();
@@ -204,7 +222,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       setEditingMaster(null);
       setMasterForm({ nama: '', deskripsi: '', jabatan: '', fileTemplate: null, instansi: '' });
     } catch (err) {
-      alert(`Koneksi gagal: Gagal menyimpan data template/master.`);
+      showToast(`Koneksi gagal: Gagal menyimpan data template/master.`);
     } finally {
       setIsSavingMaster(false);
     }
@@ -231,7 +249,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
           if (!res.ok) throw new Error("Gagal menghapus master data");
           await fetchData();
         } catch {
-          alert("Gagal menghapus master data.");
+          showToast("Gagal menghapus master data.");
         }
       }
     });
@@ -246,7 +264,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     const judulTrimmed = String(formData.judul || "").trim();
 
     if (!perihalTrimmed || !jenisSuratTrimmed || !dariTrimmed || !instansiTrimmed || !tujuanTrimmed || !judulTrimmed) {
-      return alert("Kolom wajib diisi (Judul, Perihal, Jenis, Pengirim, Tujuan, Instansi)");
+      return showToast("Harap isi semua kolom yang diperlukan (*)");
     }
 
     setIsSaving(true);
@@ -281,7 +299,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       resetForm();
     } catch (err) {
       console.error(err);
-      alert(`Gagal menyimpan data.`);
+      showToast(`Gagal menyimpan data.`);
     } finally {
       setIsSaving(false);
     }
@@ -295,10 +313,10 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
         setDeleteModalConfig(prev => ({ ...prev, isOpen: false }));
         try {
           const res = await fetch(`${API_BASE}/surat/${s.id}`, { method: 'DELETE' });
-          if (!res.ok) return alert("Gagal menghapus: Server memberikan respon negatif.");
+          if (!res.ok) return showToast("Gagal menghapus: Server memberikan respon negatif.");
           await fetchData();
         } catch {
-          alert("Koneksi terputus ke server.");
+          showToast("Koneksi terputus ke server.");
         }
       }
     });
@@ -313,9 +331,9 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
     if (!nomor) return;
     try {
       await navigator.clipboard.writeText(nomor);
-      alert('Nomor surat disalin ke clipboard.');
+      showToast('Nomor surat disalin ke clipboard.', 'success');
     } catch {
-      alert('Gagal menyalin nomor surat.');
+      showToast('Gagal menyalin nomor surat.');
     }
   };
 
@@ -387,6 +405,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
   return (
     <>
+      {toast.show && <Toast message={toast.message} type={toast.type} />}
       {!forceActiveTab && (
         <div className="flex flex-col gap-4 mb-6 border-b border-slate-200 md:flex-row md:items-center md:justify-between mt-2">
           <div className="flex items-center gap-6">
