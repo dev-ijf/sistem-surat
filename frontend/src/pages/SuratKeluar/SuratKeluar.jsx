@@ -162,7 +162,6 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
         const url = editingMaster ? `${API_BASE}/setting/${endpoint}/${editingMaster.id}` : `${API_BASE}/setting/${endpoint}`;
         const formData = new FormData();
         formData.append("nama", masterForm.nama);
-        if (masterForm.instansi) formData.append("instansi", masterForm.instansi);
         if (masterForm.fileTemplate) formData.append("fileTemplate", masterForm.fileTemplate);
         
         const res = await fetch(url, { method, body: formData });
@@ -707,13 +706,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                     <input type="file" className="input-field file:mr-2 file:rounded-md file:border-0 file:bg-slate-100 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-slate-600 text-xs" accept=".docx" onChange={e => setMasterForm({ ...masterForm, fileTemplate: e.target.files?.[0] || null })} />
                     {editingMaster && editingMaster.file_path && <p className="text-[10px] text-slate-400 mt-1">File saat ini: {editingMaster.file_path}</p>}
                   </div>
-                  <div className="space-y-2 mt-3">
-                    <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">Pilih Instansi</label>
-                    <select className="input-field" value={masterForm.instansi || ''} onChange={e => setMasterForm({ ...masterForm, instansi: e.target.value })}>
-                      <option value="">-- Pilih Instansi --</option>
-                      {masterData['Instansi']?.map(i => <option key={i.id} value={i.nama}>{i.nama}</option>)}
-                    </select>
-                  </div>
+
                 </>
               ) : (
                 <div className="space-y-2">
