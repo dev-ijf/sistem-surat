@@ -409,7 +409,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
             <div className="flex items-center gap-2.5">
               <FileText className="text-indigo-600" size={26} strokeWidth={2} />
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold text-slate-800">Manajemen Surat</h2>
+                <h2 className="text-xl font-bold text-black">Manajemen Surat</h2>
                 <p className="text-sm text-slate-500 mt-0.5">Kelola data surat keluar dan arsip digital</p>
               </div>
             </div>
@@ -425,15 +425,6 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
               >
                 <Plus size={16} strokeWidth={2.5} /> Tambah Surat
               </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4">
-            <div className="grid gap-3 md:grid-cols-4">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Total Surat</p>
-                <p className="mt-0.5 text-xl font-bold text-slate-900">{totalCount}</p>
-              </div>
             </div>
           </div>
 
@@ -820,24 +811,8 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                         value={formData.templateKop || ''}
                         onChange={e => setFormData({ ...formData, templateKop: e.target.value })}
                       >
-                        <option value="">{formData.instansi ? '-- Pilih Kop Surat --' : '-- Pilih Instansi Dahulu --'}</option>
+                        <option value="">-- Pilih Kop Surat --</option>
                         {(masterData['Kop Surat'] || [])
-                          .filter(kop => {
-                            if (!formData.instansi) return false;
-                            const currentInstansi = String(formData.instansi).trim().toLowerCase();
-                            
-                            // 1. Check exact or partial match on the assigned instansi
-                            if (kop.instansi) {
-                               const kopInstansi = String(kop.instansi).trim().toLowerCase();
-                               if (kopInstansi === currentInstansi || currentInstansi.includes(kopInstansi) || kopInstansi.includes(currentInstansi)) {
-                                 return true;
-                               }
-                            }
-                            
-                            // 2. Fallback check: check if the template name contains the instansi name
-                            const keywords = currentInstansi.split(' ').filter(w => w.length > 2);
-                            return keywords.some(kw => kop.nama.toLowerCase().includes(kw));
-                          })
                           .map((kop, idx) => (
                             <option key={idx} value={kop.nama}>{kop.nama.replace('.docx', '')}</option>
                           ))
