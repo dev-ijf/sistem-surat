@@ -4,10 +4,29 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
-const { Pool, Client } = require('pg');
 const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
+const { exec } = require('child_process');
+const { pool } = require('./src/config/db');
+const authRoutes = require('./src/routes/authRoutes');
+
+const convertToPdf = (inputPath, outputPath) => {
+  return new Promise((resolve, reject) => {
+    // Escape single quotes just in case
+    const safeInput = path.resolve(inputPath).replace(/'/g, "''");
+    const safeOutput = path.resolve(outputPath).replace(/'/g, "''");
+    const psCommand = `$word = New-Object -ComObject Word.Application; $word.Visible = $false; $doc = $word.Documents.Open('${safeInput}'); $doc.SaveAs([ref] '${safeOutput}', [ref] 17); $doc.Close(); $word.Quit();`;
+
+    exec(`powershell -Command "${psCommand}"`, (error, stdout, stderr) => {
+      if (error) {
+        console.error('PDF Conversion Error:', error);
+        resolve(false);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+};
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,27 +36,25 @@ const DB_USER = process.env.DB_USER || 'postgres';
 const DB_PASSWORD = process.env.DB_PASSWORD || '';
 const DB_NAME = process.env.DB_NAME || 'sistem_surat';
 
-let pool;
-
 app.use(cors());
 app.use(express.json());
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  res.set('Expires', '-1');
-  res.set('Pragma', 'no-cache');
-  next();
-});
-const uploadDir = process.env.VERCEL
-  ? path.join('/tmp', 'uploads')
-  : path.join(__dirname, 'uploads');
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/auth', authRoutes);
 
-app.use('/uploads', express.static(uploadDir));
-
+const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
+    cb(null, uniqueName);
+  }
+});
 
 const upload = multer({ storage });
 
@@ -125,56 +142,6 @@ const createMasterRoutes = (endpoint, table, fields) => {
 };
 
 const initializeDatabase = async () => {
-  const adminConfig = {
-    host: DB_HOST,
-    port: DB_PORT,
-    user: DB_USER,
-    database: 'postgres'
-  };
-  if (DB_PASSWORD !== '') {
-    adminConfig.password = DB_PASSWORD;
-  }
-  /** 
-    const adminClient = new Client(adminConfig);
-    await adminClient.connect();
-    const dbExists = await adminClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [DB_NAME]);
-    if (dbExists.rowCount === 0) {
-      await adminClient.query(`CREATE DATABASE "${DB_NAME}"`);
-    }
-    await adminClient.end();
-  */
-  const poolConfig = process.env.DATABASE_URL
-    ? {
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false,
-      },
-      max: 10,
-    }
-    : {
-      host: DB_HOST,
-      port: DB_PORT,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      database: DB_NAME,
-      max: 10,
-    };
-
-  pool = new Pool(poolConfig);
-
-  await query(`CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    nama VARCHAR(255) NOT NULL,
-    role VARCHAR(50) DEFAULT 'admin',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  try {
-    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT \'Aktif\'');
-  } catch (e) {
-    console.error("Error adding status column to users", e);
-  }
 
   await query(`CREATE TABLE IF NOT EXISTS jenis_surat (
     id SERIAL PRIMARY KEY,
@@ -205,17 +172,14 @@ const initializeDatabase = async () => {
     nama VARCHAR(255) NOT NULL
   )`);
 
-  await query(`CREATE TABLE IF NOT EXISTS kopsurat (
+  await query(`CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(255) NOT NULL,
-    file_path VARCHAR(255) DEFAULT '',
-    instansi VARCHAR(255) DEFAULT ''
+    email VARCHAR(255) UNIQUE NOT NULL,
+    role VARCHAR(50) DEFAULT 'Staff',
+    status VARCHAR(50) DEFAULT 'Aktif',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
-  try {
-    await query('ALTER TABLE kopsurat ADD COLUMN IF NOT EXISTS instansi VARCHAR(255) DEFAULT \'\'');
-  } catch (e) {
-    console.error("Error adding instansi column to kopsurat", e);
-  }
 
   await query(`CREATE TABLE IF NOT EXISTS surat (
     id SERIAL PRIMARY KEY,
@@ -224,7 +188,9 @@ const initializeDatabase = async () => {
     tglSurat DATE,
     dari VARCHAR(255) DEFAULT '',
     instansi VARCHAR(255) DEFAULT '',
-    perihal TEXT,    judul VARCHAR(255) DEFAULT '',    kategori VARCHAR(255) DEFAULT 'Biasa',
+    perihal TEXT,
+    judul TEXT,
+    kategori VARCHAR(255) DEFAULT 'Biasa',
     nomorSurat VARCHAR(255) DEFAULT '',
     status VARCHAR(100) DEFAULT 'Draft',
     penyimpananFisik VARCHAR(255) DEFAULT '',
@@ -232,6 +198,18 @@ const initializeDatabase = async () => {
     fileSuratPath VARCHAR(255) DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  await query(`CREATE TABLE IF NOT EXISTS kopsurat (
+    id SERIAL PRIMARY KEY,
+    nama VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) DEFAULT '',
+    instansi VARCHAR(255) DEFAULT ''
+  )`);
+  try {
+    await query(`ALTER TABLE kopsurat ADD COLUMN IF NOT EXISTS instansi VARCHAR(255) DEFAULT ''`);
+  } catch (e) {
+    console.error('Error adding instansi column to kopsurat', e);
+  }
 
   const seedIfEmpty = async (table, rows, fields) => {
     const result = await pool.query(`SELECT COUNT(*) AS count FROM ${table}`);
@@ -244,10 +222,6 @@ const initializeDatabase = async () => {
       }
     }
   };
-
-  await seedIfEmpty('users', [
-    { email: 'kukies.chocolate@gmail.com', nama: 'Admin', role: 'Admin', status: 'Aktif' }
-  ], ['email', 'nama', 'role', 'status']);
 
   await seedIfEmpty('jenis_surat', [
     { nama: 'Surat Keputusan', deskripsi: 'Surat resmi keputusan' },
@@ -280,6 +254,10 @@ const initializeDatabase = async () => {
     { nama: 'Divisi Operasional' }
   ], ['nama']);
 
+  await seedIfEmpty('users', [
+    { nama: 'Admin Surat', email: 'kukies.chocolate@gmail.com', role: 'Admin', status: 'Aktif' }
+  ], ['nama', 'email', 'role', 'status']);
+
   await seedIfEmpty('kopsurat', [
     { nama: 'Kop Surat Akademi Insan Mulia.docx' },
     { nama: 'Kop Surat Indonesia Juara.docx' },
@@ -297,78 +275,9 @@ app.get('/', (req, res) => {
   res.send('Backend aktif');
 });
 
-app.get(['/api', '/api/health'], (req, res) => {
-  res.json({ status: 'ok', message: 'Backend aktif' });
-});
-
-app.use('/api', ensureDatabaseInitialized);
-
-const verifyGoogleToken = (accessToken) => {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'www.googleapis.com',
-      path: '/oauth2/v3/userinfo',
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'User-Agent': 'SistemSurat-App'
-      }
-    };
-
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          try { resolve(JSON.parse(data)); } catch (error) { reject(new Error('Gagal membaca data dari Google')); }
-        } else {
-          reject(new Error('Token Google tidak valid atau sudah kedaluwarsa'));
-        }
-      });
-    });
-    req.on('error', (error) => { reject(new Error('Masalah koneksi ke server Google')); });
-    req.end();
-  });
-};
-
-app.post('/api/auth/google', async (req, res) => {
-  try {
-    const { token } = req.body;
-    if (!token) {
-      return res.status(400).json({ message: 'Token tidak dikirim oleh frontend!' });
-    }
-
-    const payload = await verifyGoogleToken(token);
-    const userEmail = payload.email;
-
-    if (!userEmail) {
-      return res.status(401).json({ message: 'Akses ditolak: Tidak dapat menemukan email di token ini.' });
-    }
-
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [userEmail]);
-    const user = result.rows[0];
-
-    if (!user) {
-      return res.status(401).json({ message: 'Akses ditolak: Email belum terdaftar di dalam sistem.' });
-    }
-
-    res.status(200).json({
-      message: 'Login berhasil!',
-      user: {
-        email: user.email,
-        name: user.nama,
-        role: user.role,
-        picture: payload.picture,
-      },
-    });
-  } catch (error) {
-    res.status(401).json({ message: error.message });
-  }
-});
-
 app.get('/api/surat', async (req, res) => {
   try {
-    const rows = await query('SELECT id, tujuan, jenissurat, tglsurat, dari, instansi, perihal, judul, kategori, nomorsurat, status, penyimpananfisik, filesuratname, filesuratpath, created_at FROM surat ORDER BY id DESC');
+    const rows = await query('SELECT * FROM surat ORDER BY id DESC');
     res.json(rows.map(mapSuratRow));
   } catch (err) {
     console.error('GET /api/surat error', err);
@@ -382,138 +291,89 @@ createMasterRoutes('kategori', 'kategori_surat', ['nama', 'deskripsi']);
 createMasterRoutes('instansi', 'instansi', ['nama']);
 createMasterRoutes('kepada', 'kepada_internal', ['nama']);
 
-
-app.get('/api/setting/kopsurat', async (req, res) => {
-  try {
-    const rows = await query('SELECT id, nama, file_path, instansi FROM kopsurat ORDER BY id');
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Gagal mengambil data.' });
+app.get('/api/surat/templates', (req, res) => {
+  const templateDir = path.join(__dirname, 'templates');
+  if (!fs.existsSync(templateDir)) {
+    return res.json([]);
   }
-});
-
-app.post('/api/setting/kopsurat', upload.single('fileTemplate'), async (req, res) => {
-  try {
-    let { nama, instansi } = req.body;
-    instansi = (instansi || '').trim();
-    if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
-
-    let filePath = '';
-    let fileData = null;
-    let fileMime = null;
-    if (req.file) {
-      filePath = nama;
-      fileData = req.file.buffer;
-      fileMime = req.file.mimetype;
-    }
-
-    const inserted = await pool.query(
-      'INSERT INTO kopsurat (nama, file_path, file_data, file_mime, instansi) VALUES ($1, $2, $3, $4, $5) RETURNING id, nama, file_path, instansi',
-      [nama, filePath, fileData, fileMime, instansi || '']
-    );
-    res.json(inserted.rows ? inserted.rows[0] : inserted[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Gagal menyimpan data' });
-  }
-});
-
-app.put('/api/setting/kopsurat/:id', upload.single('fileTemplate'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    let { nama, instansi } = req.body;
-    instansi = (instansi || '').trim();
-    if (!nama.toLowerCase().endsWith('.docx')) nama += '.docx';
-
-    const existing = await query('SELECT id, nama, file_path FROM kopsurat WHERE id = $1', [id]);
-    const ext = existing[0] || (existing.rows && existing.rows[0]);
-    let filePath = ext?.file_path || '';
-
-    let updated;
-    if (req.file) {
-      filePath = nama;
-      updated = await pool.query(
-        'UPDATE kopsurat SET nama = $1, file_path = $2, file_data = $3, file_mime = $4, instansi = $5 WHERE id = $6 RETURNING id, nama, file_path, instansi',
-        [nama, filePath, req.file.buffer, req.file.mimetype, instansi || '', id]
-      );
-    } else {
-      filePath = nama;
-      updated = await pool.query(
-        'UPDATE kopsurat SET nama = $1, file_path = $2, instansi = $3 WHERE id = $4 RETURNING id, nama, file_path, instansi',
-        [nama, filePath, instansi || '', id]
-      );
-    }
-    res.json(updated.rows ? updated.rows[0] : updated[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Gagal update data' });
-  }
-});
-
-app.delete('/api/setting/kopsurat/:id', async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    await pool.query('DELETE FROM kopsurat WHERE id = $1', [id]);
-    res.json({ message: 'Deleted' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Gagal hapus data' });
-  }
-});
-
-app.get('/api/surat/templates', async (req, res) => {
-  try {
-    const rows = await query('SELECT nama FROM kopsurat ORDER BY id');
-    res.json(rows.map(r => r.nama));
-  } catch (err) {
-    res.status(500).json({ message: 'Gagal mengambil templates.' });
-  }
+  const files = fs.readdirSync(templateDir).filter(f => f.endsWith('.docx'));
+  res.json(files);
 });
 
 app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
   try {
     const {
-      tujuan, jenisSurat, tglSurat, dari, perihal, kategori, nomorSurat,
-      status, instansi, penyimpananFisik, templateKop
+      tujuan = '',
+      jenisSurat = '',
+      tglSurat = '',
+      dari = '',
+      perihal = '',
+      judul = '',
+      kategori = 'Biasa',
+      nomorSurat = '',
+      status = 'Draft',
+      instansi = '',
+      penyimpananFisik = '',
+      templateKop = ''
     } = req.body;
 
-    let fileSuratName = req.file ? req.file.originalname : (templateKop ? templateKop : '');
-    let fileSuratPath = '';
-    let fileData = null;
-    let fileMime = null;
+    let fileSuratName = req.file ? req.file.originalname : '';
+    let fileSuratPath = req.file ? `/uploads/${req.file.filename}` : '';
 
-    if (req.file) {
-      fileData = req.file.buffer;
-      fileMime = req.file.mimetype;
-    } else if (templateKop) {
-      const kopsuratRows = await pool.query('SELECT file_data FROM kopsurat WHERE nama = $1', [templateKop]);
-      const kop = kopsuratRows.rows ? kopsuratRows.rows[0] : kopsuratRows[0];
-      if (kop && kop.file_data) {
-        const zip = new PizZip(kop.file_data);
-        const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, delimiters: { start: '{{', end: '}}' } });
-        doc.render({ tujuan, jenisSurat, tglSurat, dari, perihal, kategori, nomorSurat, instansi, judul: req.body.judul });
-        fileData = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
-        fileMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        const cleanName = String(perihal || req.body.judul || 'Surat').replace(/[^a-zA-Z0-9 -]/g, '').trim();
-        fileSuratName = cleanName + '.docx';
+    if (!req.file && templateKop) {
+      try {
+        const templatePath = path.join(__dirname, 'templates', templateKop);
+        if (fs.existsSync(templatePath)) {
+          const content = fs.readFileSync(templatePath, 'binary');
+          const zip = new PizZip(content);
+          const doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+            delimiters: { start: '{{', end: '}}' }
+          });
+
+          doc.render({
+            tujuan: tujuan,
+            jenisSurat: jenisSurat,
+            tglSurat: tglSurat,
+            dari: dari,
+            perihal: perihal,
+            judul: judul,
+            kategori: kategori,
+            nomorSurat: nomorSurat,
+            instansi: instansi
+          });
+
+          const buf = doc.getZip().generate({
+            type: 'nodebuffer',
+            compression: 'DEFLATE',
+          });
+
+          const generatedFilename = `Surat-${Date.now()}.docx`;
+          const generatedPath = path.join(__dirname, 'uploads', generatedFilename);
+          fs.writeFileSync(generatedPath, buf);
+
+          fileSuratName = generatedFilename;
+          fileSuratPath = `/uploads/${generatedFilename}`;
+
+          // Create PDF preview
+          const pdfFilename = generatedFilename.replace('.docx', '.pdf');
+          const pdfPath = path.join(__dirname, 'uploads', pdfFilename);
+          convertToPdf(generatedPath, pdfPath).catch(console.error);
+        }
+      } catch (err) {
+        console.error('Error generating docx:', err);
       }
+    } else if (req.file && req.file.filename.endsWith('.docx')) {
+      const pdfFilename = req.file.filename.replace('.docx', '.pdf');
+      const pdfPath = path.join(__dirname, 'uploads', pdfFilename);
+      convertToPdf(req.file.path, pdfPath).catch(console.error);
     }
 
     const inserted = await pool.query(
-      'INSERT INTO surat (tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, file_data, file_mime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *',
-      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, fileData, fileMime]
+      'INSERT INTO surat (tujuan, jenisSurat, tglSurat, dari, instansi, perihal, judul, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
+      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, judul, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath]
     );
-
-    const newId = inserted.rows[0].id;
-    if (fileData) {
-      const finalPath = `/api/surat/download/${newId}`;
-      const updated = await pool.query(
-        'UPDATE surat SET filesuratpath = $1 WHERE id = $2 RETURNING *',
-        [finalPath, newId]
-      );
-      return res.status(201).json(mapSuratRow(updated.rows[0]));
-    }
 
     res.status(201).json(mapSuratRow(inserted.rows[0]));
   } catch (err) {
@@ -525,8 +385,8 @@ app.post('/api/surat', upload.single('fileSurat'), async (req, res) => {
 app.put('/api/surat/:id', upload.single('fileSurat'), async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const rows = await pool.query('SELECT * FROM surat WHERE id = $1', [id]);
-    const surat = mapSuratRow(rows.rows ? rows.rows[0] : rows[0]);
+    const rows = await query('SELECT * FROM surat WHERE id = $1', [id]);
+    const surat = mapSuratRow(rows[0]);
     if (!surat) {
       return res.status(404).json({ message: 'Surat tidak ditemukan' });
     }
@@ -537,6 +397,7 @@ app.put('/api/surat/:id', upload.single('fileSurat'), async (req, res) => {
       tglSurat = surat.tglSurat,
       dari = surat.dari,
       perihal = surat.perihal,
+      judul = surat.judul,
       kategori = surat.kategori,
       nomorSurat = surat.nomorSurat,
       status = surat.status,
@@ -544,25 +405,63 @@ app.put('/api/surat/:id', upload.single('fileSurat'), async (req, res) => {
       penyimpananFisik = surat.penyimpananFisik
     } = req.body;
 
-    const fileSuratName = req.file ? req.file.originalname : (req.body.templateKop ? req.body.templateKop : surat.fileSuratName);
+    const fileSuratName = req.file ? req.file.originalname : surat.fileSuratName;
+    const fileSuratPath = req.file ? `/uploads/${req.file.filename}` : surat.fileSuratPath;
 
-    if (req.file) {
-      const finalPath = `/api/surat/download/${id}`;
-      const updated = await pool.query(
-        'UPDATE surat SET tujuan = $1, jenisSurat = $2, tglSurat = $3, dari = $4, instansi = $5, perihal = $6, kategori = $7, nomorSurat = $8, status = $9, penyimpananFisik = $10, fileSuratName = $11, fileSuratPath = $12, file_data = $13, file_mime = $14 WHERE id = $15 RETURNING *',
-        [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, finalPath, req.file.buffer, req.file.mimetype, id]
-      );
-      return res.json(mapSuratRow(updated.rows ? updated.rows[0] : updated[0]));
-    } else {
-      const updated = await pool.query(
-        'UPDATE surat SET tujuan = $1, jenisSurat = $2, tglSurat = $3, dari = $4, instansi = $5, perihal = $6, kategori = $7, nomorSurat = $8, status = $9, penyimpananFisik = $10, fileSuratName = $11 WHERE id = $12 RETURNING *',
-        [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, id]
-      );
-      return res.json(mapSuratRow(updated.rows ? updated.rows[0] : updated[0]));
+    if (req.file && req.file.filename.endsWith('.docx')) {
+      const pdfFilename = req.file.filename.replace('.docx', '.pdf');
+      const pdfPath = path.join(__dirname, 'uploads', pdfFilename);
+      convertToPdf(req.file.path, pdfPath).catch(console.error);
     }
+
+    const updated = await pool.query(
+      'UPDATE surat SET tujuan = $1, jenisSurat = $2, tglSurat = $3, dari = $4, instansi = $5, perihal = $6, judul = $7, kategori = $8, nomorSurat = $9, status = $10, penyimpananFisik = $11, fileSuratName = $12, fileSuratPath = $13 WHERE id = $14 RETURNING *',
+      [tujuan, jenisSurat, tglSurat, dari, instansi, perihal, judul, kategori, nomorSurat, status, penyimpananFisik, fileSuratName, fileSuratPath, id]
+    );
+
+    res.json(mapSuratRow(updated.rows[0]));
   } catch (err) {
     console.error('PUT /api/surat/:id error', err);
     res.status(500).json({ message: 'Gagal memperbarui surat.' });
+  }
+});
+
+app.get('/api/surat/preview/:filename', async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    if (!filename.endsWith('.pdf')) {
+      return res.status(400).send('Only PDF preview is supported');
+    }
+
+    const docxFilename = filename.replace('.pdf', '.docx');
+    const pdfPath = path.join(__dirname, 'uploads', filename);
+    const docxPath = path.join(__dirname, 'uploads', docxFilename);
+
+    // If PDF already exists, send it
+    if (fs.existsSync(pdfPath)) {
+      res.contentType('application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="' + filename + '"');
+      return res.sendFile(pdfPath);
+    }
+
+    // If DOCX exists but no PDF, convert it on the fly
+    if (fs.existsSync(docxPath)) {
+      try {
+        await convertToPdf(docxPath, pdfPath);
+        if (fs.existsSync(pdfPath)) {
+          res.contentType('application/pdf');
+          res.setHeader('Content-Disposition', 'inline; filename="' + filename + '"');
+          return res.sendFile(pdfPath);
+        }
+      } catch (e) {
+        console.error('On-the-fly PDF conversion failed', e);
+      }
+    }
+
+    res.status(404).send('File not found');
+  } catch (err) {
+    console.error('Preview error', err);
+    res.status(500).send('Internal Server Error');
   }
 });
 
@@ -581,103 +480,6 @@ app.delete('/api/surat/:id', async (req, res) => {
   }
 });
 
-app.get(['/api/surat/preview-template/:id', '/api/surat/preview-template/:id/:filename'], async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const rows = await pool.query('SELECT * FROM surat WHERE id = $1', [id]);
-    const surat = rows.rows ? rows.rows[0] : rows[0];
-    if (!surat || !surat.filesuratname) {
-      return res.status(404).json({ message: 'Template tidak ditemukan' });
-    }
-
-    const templateKop = surat.filesuratname;
-    const kopsuratRows = await pool.query('SELECT file_data FROM kopsurat WHERE nama = $1', [templateKop]);
-    const kop = kopsuratRows.rows ? kopsuratRows.rows[0] : kopsuratRows[0];
-
-    if (kop && kop.file_data) {
-      const zip = new PizZip(kop.file_data);
-      const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, delimiters: { start: '{{', end: '}}' } });
-      doc.render({
-        tujuan: surat.tujuan,
-        jenisSurat: surat.jenissurat,
-        tglSurat: surat.tglsurat,
-        dari: surat.dari,
-        perihal: surat.perihal,
-        judul: surat.judul,
-        kategori: surat.kategori,
-        nomorSurat: surat.nomorsurat,
-        instansi: surat.instansi
-      });
-
-      const buf = doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' });
-      const cleanName = String(surat.perihal || surat.judul || 'Surat').replace(/[^a-zA-Z0-9 -]/g, '').trim();
-      const generatedFilename = cleanName + '.docx';
-
-      res.setHeader('Content-Length', buf.length);
-      res.setHeader('Content-Disposition', 'inline; filename="' + generatedFilename + '"');
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      return res.send(buf);
-    } else {
-      return res.status(404).json({ message: 'File template fisik tidak ditemukan di database.' });
-    }
-  } catch (err) {
-    console.error('GET /api/surat/preview-template/:id error', err);
-    res.status(500).json({ message: 'Gagal men-generate template preview.' });
-  }
-});
-
-
-app.get('/api/surat/download/:id', async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const rows = await pool.query('SELECT filesuratname, file_data, file_mime FROM surat WHERE id = $1', [id]);
-    const surat = rows.rows ? rows.rows[0] : rows[0];
-    if (!surat || !surat.file_data) {
-      return res.status(404).json({ message: 'File tidak ditemukan di database.' });
-    }
-    const filename = surat.filesuratname || 'document';
-    const mime = surat.file_mime || 'application/octet-stream';
-    res.setHeader('Content-Length', surat.file_data.length);
-    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
-    res.setHeader('Content-Type', mime);
-    res.send(surat.file_data);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-let databaseInitialized = false;
-let databaseInitPromise = null;
-
-async function ensureDatabaseInitialized(req, res, next) {
-  try {
-    if (!databaseInitialized) {
-      if (!databaseInitPromise) {
-        databaseInitPromise = initializeDatabase()
-          .then(() => {
-            databaseInitialized = true;
-            console.log("Database initialized");
-          })
-          .catch((error) => {
-            databaseInitPromise = null;
-            throw error;
-          });
-      }
-
-      await databaseInitPromise;
-    }
-    next();
-  } catch (error) {
-    console.error("Gagal menginisialisasi database:", error);
-    res.status(500).json({
-      error: "Gagal menginisialisasi database",
-      detail: error.message,
-    });
-  }
-}
-
-app.get('/api/test-deploy', (req, res) => res.json({ deployed: true, time: Date.now() }));
 app.get('/api/users', async (req, res) => {
   try {
     const rows = await query('SELECT id, nama, email, role, status, created_at FROM users ORDER BY id ASC');
@@ -743,14 +545,17 @@ app.delete('/api/users/:id', async (req, res) => {
     res.status(500).json({ message: 'Gagal menghapus user.' });
   }
 });
-module.exports = app;
 
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server berjalan di port ${PORT}`);
-  });
-}
+const startServer = async () => {
+  try {
+    await initializeDatabase();
+    app.listen(PORT, () => {
+      console.log(`Server berjalan di http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Gagal menginisialisasi database:', error);
+    process.exit(1);
+  }
+};
 
-
-
-
+startServer();
