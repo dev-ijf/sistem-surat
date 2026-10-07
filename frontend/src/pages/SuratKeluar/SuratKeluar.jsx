@@ -708,8 +708,8 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       )}
 
       {showMasterModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowMasterModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20" onClick={e => e.stopPropagation()}>
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
               <h2 className="text-lg font-bold !text-slate-900">{editingMaster ? 'Update' : 'New'} {activeMasterCard || activeMasterTab}</h2>
             </div>
@@ -735,7 +735,7 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
               )}
             </div>
             <div className="p-5 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-3">
-              <button onClick={() => setShowMasterModal(false)} className="text-sm font-medium text-slate-400">Cancel</button>
+              <button onClick={() => setShowMasterModal(false)} className="text-sm font-medium text-slate-400 hover:text-slate-600">Discard</button>
               <button onClick={handleSaveMaster} disabled={isSavingMaster} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 disabled:opacity-50 transition-all">
                 {isSavingMaster ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                 Simpan
@@ -746,8 +746,8 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-white/20">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-white/20" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100">
               <div>
                 <h2 className="text-lg font-bold !text-slate-900 tracking-tight">{editingSurat ? 'Perbarui Arsip' : 'Formulir Surat Baru'}</h2>
@@ -857,13 +857,13 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
 
 
       {deleteModalConfig.isOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[450px] p-6 flex flex-col gap-6">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))}>
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[450px] p-6 flex flex-col gap-6" onClick={e => e.stopPropagation()}>
             <p className="text-[15px] font-medium text-slate-800">
               {deleteModalConfig.targetName}
             </p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-700 px-6 py-2.5 hover:bg-slate-50 border border-slate-300 rounded-xl transition-all">Batal</button>
+              <button onClick={() => setDeleteModalConfig(prev => ({ ...prev, isOpen: false }))} className="text-sm font-medium text-slate-700 px-6 py-2.5 hover:bg-slate-50 border border-slate-300 rounded-xl transition-all">Discard</button>
               <button onClick={deleteModalConfig.onConfirm} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm">Hapus</button>
             </div>
           </div>
