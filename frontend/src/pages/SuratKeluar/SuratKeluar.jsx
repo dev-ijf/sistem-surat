@@ -1,5 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Settings, Search, Trash2, Edit2, X, Save, Loader2, Hash, Calendar, Copy, Filter, Tag, Users, Building, ArrowRight, ChevronLeft, ChevronRight, Download, AlertCircle, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, FileText, Settings, Search, Trash2, Edit2, X, Save, Loader2, Hash, Calendar, Copy, Filter, Tag, Users, Building, ArrowRight, ChevronLeft, ChevronRight, Download, AlertCircle, CheckCircle2, ChevronDown } from 'lucide-react';
+
+const CustomSelect = ({ value, onChange, options, placeholder = "-- Pilih --", className = "", innerClassName = "" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value) || null;
+
+  return (
+    <div className={`relative ${className}`} ref={dropdownRef}>
+      <div
+        className={`input-field flex items-center justify-between cursor-pointer ${innerClassName}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className={selectedOption ? "text-slate-700 text-sm" : "text-slate-400 text-sm"}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </div>
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 shadow-xl rounded-xl z-[150] max-h-[220px] overflow-y-auto custom-scrollbar py-1">
+          {options.length === 0 ? (
+            <div className="p-3 text-xs text-slate-400 text-center">Data kosong</div>
+          ) : (
+            options.map((opt, idx) => (
+              <div
+                key={idx}
+                className={`px-3.5 py-2.5 text-sm cursor-pointer transition-colors ${value === opt.value ? 'bg-slate-50 text-blue-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+              >
+                {opt.label}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const getShortCode = (value) => {
   const words = String(value || '').trim().split(/\s+/).filter(Boolean);
@@ -454,33 +503,53 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 block">Kategori</label>
-                  <select className="input-field text-sm py-2 bg-slate-50 border-slate-200" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
-                    {categoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
+                  <CustomSelect
+                    innerClassName="text-sm py-2 bg-slate-50 border-slate-200"
+                    value={filterCategory}
+                    onChange={setFilterCategory}
+                    placeholder="Semua Kategori"
+                    options={categoryOptions.map(opt => ({ value: opt, label: opt }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 block">Status</label>
-                  <select className="input-field text-sm py-2 bg-slate-50 border-slate-200" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                    {statusOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
+                  <CustomSelect
+                    innerClassName="text-sm py-2 bg-slate-50 border-slate-200"
+                    value={filterStatus}
+                    onChange={setFilterStatus}
+                    placeholder="Semua Status"
+                    options={statusOptions.map(opt => ({ value: opt, label: opt }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 block">Instansi</label>
-                  <select className="input-field text-sm py-2 bg-slate-50 border-slate-200" value={filterInstansi} onChange={(e) => setFilterInstansi(e.target.value)}>
-                    {instansiOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
+                  <CustomSelect
+                    innerClassName="text-sm py-2 bg-slate-50 border-slate-200"
+                    value={filterInstansi}
+                    onChange={setFilterInstansi}
+                    placeholder="Semua Instansi"
+                    options={instansiOptions.map(opt => ({ value: opt, label: opt }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 block">Pengirim</label>
-                  <select className="input-field text-sm py-2 bg-slate-50 border-slate-200" value={filterPengirim} onChange={(e) => setFilterPengirim(e.target.value)}>
-                    {pengirimOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
+                  <CustomSelect
+                    innerClassName="text-sm py-2 bg-slate-50 border-slate-200"
+                    value={filterPengirim}
+                    onChange={setFilterPengirim}
+                    placeholder="Semua Pengirim"
+                    options={pengirimOptions.map(opt => ({ value: opt, label: opt }))}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 block">Jenis Surat</label>
-                  <select className="input-field text-sm py-2 bg-slate-50 border-slate-200" value={filterJenisSurat} onChange={(e) => setFilterJenisSurat(e.target.value)}>
-                    {jenisSuratOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
+                  <CustomSelect
+                    innerClassName="text-sm py-2 bg-slate-50 border-slate-200"
+                    value={filterJenisSurat}
+                    onChange={setFilterJenisSurat}
+                    placeholder="Semua Jenis Surat"
+                    options={jenisSuratOptions.map(opt => ({ value: opt, label: opt }))}
+                  />
                 </div>
 
                 <div className="sm:col-span-2 relative">
@@ -613,17 +682,12 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                 </div>
                 <div className="flex items-center gap-2">
                   <span>Baris</span>
-                  <select
+                  <CustomSelect
                     value={itemsPerPage}
-                    onChange={(e) => handleLimitChange(Number(e.target.value))}
-                    disabled={isPaginating}
-                    className="input-field py-1 px-2 pr-7 text-xs w-auto border-slate-200 shadow-sm"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                    onChange={(val) => !isPaginating && handleLimitChange(val)}
+                    innerClassName={`py-1 px-3 min-w-[70px] text-xs border-slate-200 shadow-sm ${isPaginating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    options={[10, 20, 50, 100].map(v => ({ value: v, label: v }))}
+                  />
                 </div>
               </div>
 
@@ -759,30 +823,39 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Jenis Surat <span className="text-red-500">*</span></label>
-                    <select className="input-field" value={formData.jenisSurat} onChange={e => setFormData({ ...formData, jenisSurat: e.target.value })}>
-                      <option value="">-- Pilih Jenis Surat --</option>
-                      {masterData['Jenis Surat']?.map(j => <option key={j.id} value={j.nama}>{j.nama}</option>)}
-                    </select>
+                    <CustomSelect
+                      value={formData.jenisSurat}
+                      onChange={val => setFormData({ ...formData, jenisSurat: val })}
+                      placeholder="-- Pilih Jenis Surat --"
+                      options={(masterData['Jenis Surat'] || []).map(j => ({ value: j.nama, label: j.nama }))}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Dari (Pengirim) <span className="text-red-500">*</span></label>
-                    <select className="input-field" value={formData.dari} onChange={e => setFormData({ ...formData, dari: e.target.value })}>
-                      <option value="">-- Pilih Pengirim --</option>
-                      {masterData['Struktur Organisasi']?.map(s => <option key={s.id} value={s.nama}>{s.nama} {s.jabatan ? `(${s.jabatan})` : ''}</option>)}
-                    </select>
+                    <CustomSelect
+                      value={formData.dari}
+                      onChange={val => setFormData({ ...formData, dari: val })}
+                      placeholder="-- Pilih Pengirim --"
+                      options={(masterData['Struktur Organisasi'] || []).map(s => ({ value: s.nama, label: `${s.nama} ${s.jabatan ? `(${s.jabatan})` : ''}` }))}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Tujuan <span className="text-red-500">*</span></label>
-                    <select className="input-field" value={formData.tujuan} onChange={e => setFormData({ ...formData, tujuan: e.target.value })}>
-                      <option value="">-- Pilih Tujuan --</option>
-                      {masterData['Kepada (Internal)']?.map(s => <option key={s.id} value={s.nama}>{s.nama}</option>)}
-                    </select>
+                    <CustomSelect
+                      value={formData.tujuan}
+                      onChange={val => setFormData({ ...formData, tujuan: val })}
+                      placeholder="-- Pilih Tujuan --"
+                      options={(masterData['Kepada (Internal)'] || []).map(s => ({ value: s.nama, label: s.nama }))}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Kategori <span className="text-red-500">*</span></label>
-                    <select className="input-field" value={formData.kategori} onChange={e => setFormData({ ...formData, kategori: e.target.value })}>
-                      {masterData['Kategori Surat']?.map(k => <option key={k.id} value={k.nama}>{k.nama}</option>)}
-                    </select>
+                    <CustomSelect
+                      value={formData.kategori}
+                      onChange={val => setFormData({ ...formData, kategori: val })}
+                      placeholder="-- Pilih Kategori --"
+                      options={(masterData['Kategori Surat'] || []).map(k => ({ value: k.nama, label: k.nama }))}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Perihal Surat <span className="text-red-500">*</span></label>
@@ -803,10 +876,12 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-semibold text-slate-400 block uppercase tracking-[0.12em]">Instansi <span className="text-red-500">*</span></label>
-                    <select className="input-field" value={formData.instansi} onChange={e => setFormData({ ...formData, instansi: e.target.value })}>
-                      <option value="">-- Pilih Instansi --</option>
-                      {masterData['Instansi']?.map(i => <option key={i.id} value={i.nama}>{i.nama}</option>)}
-                    </select>
+                    <CustomSelect
+                      value={formData.instansi}
+                      onChange={val => setFormData({ ...formData, instansi: val })}
+                      placeholder="-- Pilih Instansi --"
+                      options={(masterData['Instansi'] || []).map(i => ({ value: i.nama, label: i.nama }))}
+                    />
                   </div>
 
                   {editingSurat ? (
@@ -818,18 +893,12 @@ const SuratKeluar = ({ suratList, masterData, setMasterData, fetchData, isLoadin
                   ) : (
                     <div className="space-y-1">
                       <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 block">Kop Surat (Template) <span className="text-red-500">*</span></label>
-                      <select
-                        className="input-field"
+                      <CustomSelect
                         value={formData.templateKop || ''}
-                        onChange={e => setFormData({ ...formData, templateKop: e.target.value })}
-                      >
-                        <option value="">-- Pilih Kop Surat --</option>
-                        {(masterData['Kop Surat'] || [])
-                          .map((kop, idx) => (
-                            <option key={idx} value={kop.nama}>{kop.nama.replace('.docx', '')}</option>
-                          ))
-                        }
-                      </select>
+                        onChange={val => setFormData({ ...formData, templateKop: val })}
+                        placeholder="-- Pilih Kop Surat --"
+                        options={(masterData['Kop Surat'] || []).map((kop) => ({ value: kop.nama, label: kop.nama.replace('.docx', '') }))}
+                      />
                     </div>
                   )}
                   <div className="pt-1">
